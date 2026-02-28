@@ -1,8 +1,12 @@
 package com.ykw.blog_system.background.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.ykw.blog_system.background.pojo.Dto.QuestionBankDTO;
+import com.ykw.blog_system.background.pojo.Dto.QuestionBankQueryDTO;
 import com.ykw.blog_system.background.pojo.Entity.QuestionBank;
+import com.ykw.blog_system.background.pojo.Vo.PageQustionBankVO;
+import com.ykw.blog_system.background.pojo.Vo.QuestionBankVO;
 
 
 import java.util.List;
@@ -32,4 +36,12 @@ public interface QuestionBankService extends IService<QuestionBank> {
      * @return 是否成功
      */
     boolean deleteQuestionBank(List<Long> ids);
+
+    /**
+     * 分页查询接口
+     * @param queryDTO 查询参数DTO
+     * @return 分页结果
+     */
+
+    PageQustionBankVO pageQuery(QuestionBankQueryDTO queryDTO);
 }

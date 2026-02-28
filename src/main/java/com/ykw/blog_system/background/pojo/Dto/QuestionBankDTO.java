@@ -1,7 +1,6 @@
 package com.ykw.blog_system.background.pojo.Dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.ykw.blog_system.config.DifficultyLevelDeserializer;
+
 import lombok.Data;
 
 /**

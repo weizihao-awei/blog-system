@@ -83,6 +83,7 @@ public class QuestionBank {
     /**
      * 数据状态：1-正常，0-逻辑删除（MyBatis-Plus 逻辑删除字段）
      */
-    @TableLogic
+
+    @TableLogic(value = "1", delval = "0")
     private Integer dataState = 1;
 }
