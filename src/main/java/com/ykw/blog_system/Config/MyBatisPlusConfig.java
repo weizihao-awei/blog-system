@@ -18,14 +18,12 @@ import java.time.LocalDateTime;
  */
 @Configuration
 public class MyBatisPlusConfig {
-
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
         return interceptor;
     }
-
     /**
      * 自动填充创建/修改时间
      */
@@ -37,7 +35,6 @@ public class MyBatisPlusConfig {
                 strictInsertFill(metaObject, "createTime", LocalDateTime.class, LocalDateTime.now());
                 strictInsertFill(metaObject, "modifyTime", LocalDateTime.class, LocalDateTime.now());
             }
-
             @Override
             public void updateFill(MetaObject metaObject) {
                 strictUpdateFill(metaObject, "modifyTime", LocalDateTime.class, LocalDateTime.now());

@@ -1,13 +1,9 @@
 package com.ykw.blog_system.background.controller;
-
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ykw.blog_system.background.pojo.Dto.QuestionBankDTO;
 import com.ykw.blog_system.background.pojo.Dto.QuestionBankDeleteDTO;
 import com.ykw.blog_system.background.pojo.Dto.QuestionBankQueryDTO;
-import com.ykw.blog_system.background.pojo.Entity.QuestionBank;
 import com.ykw.blog_system.background.pojo.Result;
 import com.ykw.blog_system.background.pojo.Vo.PageQustionBankVO;
-import com.ykw.blog_system.background.pojo.Vo.QuestionBankVO;
 import com.ykw.blog_system.background.service.QuestionBankService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +25,6 @@ public class QuestionBankController {
 
     @Autowired
     private QuestionBankService questionBankService;
-
-
-
 
     /**
      * 题库分页查询接口（返回VO）
