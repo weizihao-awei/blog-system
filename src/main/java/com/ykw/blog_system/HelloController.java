@@ -9,7 +9,7 @@ public class HelloController {
     @RequestMapping("/hello") //标识请求路径
     public String hello(String name){
         System.out.println("HelloController ... hello: " + name);
-        return "Hello ss" + name;
+        return "Hello " + name;
     }
 
 }
