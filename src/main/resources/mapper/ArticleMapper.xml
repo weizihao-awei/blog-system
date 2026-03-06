@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ykw.blog_system.mapper.ArticleMapper">
+    
+    <resultMap id="BaseResultMap" type="com.ykw.blog_system.entity.Article">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="content" property="content"/>
+        <result column="html_content" property="htmlContent"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="author_id" property="authorId"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="status" property="status"/>
+        <result column="is_top" property="isTop"/>
+        <result column="is_recommend" property="isRecommend"/>
+        <result column="publish_time" property="publishTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <resultMap id="ArticleWithAuthorResultMap" type="com.ykw.blog_system.entity.Article" extends="BaseResultMap">
+        <result column="author_name" property="authorName"/>
+        <result column="author_avatar" property="authorAvatar"/>
+        <result column="category_name" property="categoryName"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        a.id, a.title, a.summary, a.content, a.html_content, a.cover_image, 
+        a.author_id, a.category_id, a.view_count, a.like_count, a.comment_count,
+        a.status, a.is_top, a.is_recommend, a.publish_time, a.create_time, a.update_time
+    </sql>
+    
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM article a WHERE a.id = #{id}
+    </select>
+    
+    <select id="selectByIdWithTags" resultMap="ArticleWithAuthorResultMap">
+        SELECT 
+            <include refid="Base_Column_List"/>,
+            u.nickname as author_name, u.avatar as author_avatar,
+            c.name as category_name
+        FROM article a
+        LEFT JOIN user u ON a.author_id = u.id
+        LEFT JOIN category c ON a.category_id = c.id
+        WHERE a.id = #{id}
+    </select>
+    
+    <select id="selectList" resultMap="ArticleWithAuthorResultMap">
+        SELECT 
+            <include refid="Base_Column_List"/>,
+            u.nickname as author_name, u.avatar as author_avatar,
+            c.name as category_name
+        FROM article a
+        LEFT JOIN user u ON a.author_id = u.id
+        LEFT JOIN category c ON a.category_id = c.id
+        <where>
+            <if test="status != null">
+                AND a.status = #{status}
+            </if>
+            <if test="categoryId != null">
+                AND a.category_id = #{categoryId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (a.title LIKE CONCAT('%', #{keyword}, '%') OR a.summary LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY a.is_top DESC, a.publish_time DESC
+    </select>
+    
+    <select id="selectByTagId" resultMap="ArticleWithAuthorResultMap">
+        SELECT 
+            <include refid="Base_Column_List"/>,
+            u.nickname as author_name, u.avatar as author_avatar,
+            c.name as category_name
+        FROM article a
+        INNER JOIN article_tag at ON a.id = at.article_id
+        LEFT JOIN user u ON a.author_id = u.id
+        LEFT JOIN category c ON a.category_id = c.id
+        <where>
+            at.tag_id = #{tagId}
+            <if test="status != null">
+                AND a.status = #{status}
+            </if>
+        </where>
+        ORDER BY a.is_top DESC, a.publish_time DESC
+    </select>
+    
+    <select id="selectByUserId" resultMap="ArticleWithAuthorResultMap">
+        SELECT 
+            <include refid="Base_Column_List"/>,
+            u.nickname as author_name, u.avatar as author_avatar,
+            c.name as category_name
+        FROM article a
+        LEFT JOIN user u ON a.author_id = u.id
+        LEFT JOIN category c ON a.category_id = c.id
+        WHERE a.author_id = #{userId}
+        <if test="status != null">
+            AND a.status = #{status}
+        </if>
+        ORDER BY a.create_time DESC
+    </select>
+    
+    <select id="selectHotArticles" resultMap="ArticleWithAuthorResultMap">
+        SELECT 
+            <include refid="Base_Column_List"/>,
+            u.nickname as author_name, u.avatar as author_avatar,
+            c.name as category_name
+        FROM article a
+        LEFT JOIN user u ON a.author_id = u.id
+        LEFT JOIN category c ON a.category_id = c.id
+        WHERE a.status = 1
+        ORDER BY a.view_count DESC, a.like_count DESC
+        LIMIT #{limit}
+    </select>
+    
+    <select id="selectLatestArticles" resultMap="ArticleWithAuthorResultMap">
+        SELECT 
+            <include refid="Base_Column_List"/>,
+            u.nickname as author_name, u.avatar as author_avatar,
+            c.name as category_name
+        FROM article a
+        LEFT JOIN user u ON a.author_id = u.id
+        LEFT JOIN category c ON a.category_id = c.id
+        WHERE a.status = 1
+        ORDER BY a.publish_time DESC
+        LIMIT #{limit}
+    </select>
+    
+    <select id="selectRecommendArticles" resultMap="ArticleWithAuthorResultMap">
+        SELECT 
+            <include refid="Base_Column_List"/>,
+            u.nickname as author_name, u.avatar as author_avatar,
+            c.name as category_name
+        FROM article a
+        LEFT JOIN user u ON a.author_id = u.id
+        LEFT JOIN category c ON a.category_id = c.id
+        WHERE a.status = 1 AND a.is_recommend = 1
+        ORDER BY a.publish_time DESC
+        LIMIT #{limit}
+    </select>
+    
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO article (title, summary, content, html_content, cover_image, author_id, 
+            category_id, status, is_top, is_recommend, publish_time)
+        VALUES (#{title}, #{summary}, #{content}, #{htmlContent}, #{coverImage}, #{authorId},
+            #{categoryId}, #{status}, #{isTop}, #{isRecommend}, 
+            <if test="status == 1">NOW()</if><if test="status != 1">NULL</if>)
+    </insert>
+    
+    <update id="update">
+        UPDATE article
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="htmlContent != null">html_content = #{htmlContent},</if>
+            <if test="coverImage != null">cover_image = #{coverImage},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="status != null">
+                status = #{status},
+                <if test="status == 1">publish_time = NOW(),</if>
+            </if>
+            <if test="isTop != null">is_top = #{isTop},</if>
+            <if test="isRecommend != null">is_recommend = #{isRecommend}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM article WHERE id = #{id}
+    </delete>
+    
+    <update id="increaseViewCount">
+        UPDATE article SET view_count = view_count + 1 WHERE id = #{articleId}
+    </update>
+    
+    <update id="increaseLikeCount">
+        UPDATE article SET like_count = like_count + #{increment} WHERE id = #{articleId}
+    </update>
+    
+    <update id="increaseCommentCount">
+        UPDATE article SET comment_count = comment_count + #{increment} WHERE id = #{articleId}
+    </update>
+    
+    <select id="countArticles" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM article
+        <where>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+    
+    <select id="sumViewCount" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(view_count), 0) FROM article WHERE status = 1
+    </select>
+</mapper>

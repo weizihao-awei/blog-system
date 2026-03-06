@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ykw.blog_system.mapper.TagMapper">
+    
+    <resultMap id="BaseResultMap" type="com.ykw.blog_system.entity.Tag">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="color" property="color"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="article_count" property="articleCount"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        id, name, color, status, create_time
+    </sql>
+    
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM tag WHERE id = #{id}
+    </select>
+    
+    <select id="selectByName" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM tag WHERE name = #{name}
+    </select>
+    
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM tag
+        <where>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+    
+    <select id="selectByArticleId" resultMap="BaseResultMap">
+        SELECT t.* FROM tag t
+        INNER JOIN article_tag at ON t.id = at.tag_id
+        WHERE at.article_id = #{articleId} AND t.status = 1
+    </select>
+    
+    <select id="selectHotTags" resultMap="BaseResultMap">
+        SELECT t.*, COUNT(at.article_id) as article_count
+        FROM tag t
+        LEFT JOIN article_tag at ON t.id = at.tag_id
+        LEFT JOIN article a ON at.article_id = a.id AND a.status = 1
+        WHERE t.status = 1
+        GROUP BY t.id
+        ORDER BY article_count DESC
+        LIMIT #{limit}
+    </select>
+    
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tag (name, color, status)
+        VALUES (#{name}, #{color}, #{status})
+    </insert>
+    
+    <update id="update">
+        UPDATE tag
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="color != null">color = #{color},</if>
+            <if test="status != null">status = #{status}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM tag WHERE id = #{id}
+    </delete>
+    
+    <select id="countTags" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM tag WHERE status = 1
+    </select>
+</mapper>

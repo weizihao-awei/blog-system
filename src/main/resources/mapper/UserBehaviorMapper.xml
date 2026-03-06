@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ykw.blog_system.mapper.UserBehaviorMapper">
+    
+    <resultMap id="BaseResultMap" type="com.ykw.blog_system.entity.UserBehavior">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="article_id" property="articleId"/>
+        <result column="behavior_type" property="behaviorType"/>
+        <result column="behavior_weight" property="behaviorWeight"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        id, user_id, article_id, behavior_type, behavior_weight, create_time
+    </sql>
+    
+    <select id="selectByUserAndArticleAndType" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM user_behavior
+        WHERE user_id = #{userId} AND article_id = #{articleId} AND behavior_type = #{behaviorType}
+    </select>
+    
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM user_behavior WHERE user_id = #{userId}
+    </select>
+    
+    <select id="selectByArticleId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM user_behavior WHERE article_id = #{articleId}
+    </select>
+    
+    <select id="selectByUserIdAndType" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM user_behavior 
+        WHERE user_id = #{userId} AND behavior_type = #{behaviorType}
+    </select>
+    
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_behavior (user_id, article_id, behavior_type, behavior_weight)
+        VALUES (#{userId}, #{articleId}, #{behaviorType}, #{behaviorWeight})
+    </insert>
+    
+    <update id="update">
+        UPDATE user_behavior
+        SET behavior_weight = #{behaviorWeight}, create_time = NOW()
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteByUserAndArticleAndType">
+        DELETE FROM user_behavior 
+        WHERE user_id = #{userId} AND article_id = #{articleId} AND behavior_type = #{behaviorType}
+    </delete>
+</mapper>
