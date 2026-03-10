@@ -190,7 +190,7 @@ public class AuthServiceImpl implements AuthService {
         verificationCodeCache.removeCode(resetPasswordDTO.getEmail());
 
         // 发送密码重置成功邮件
-        emailService.sendPasswordResetSuccess(user.getEmail(), user.getUsername());
+      //  emailService.sendPasswordResetSuccess(user.getEmail(), user.getUsername());
 
         log.info("用户密码重置成功: {}", user.getUsername());
         return ResultVO.success("密码重置成功", null);
