@@ -166,8 +166,8 @@ interface RegisterDTO {
 interface SendCodeDTO {
   email: string;  // 邮箱（必填，有效邮箱格式）
   type: string;   // 验证码类型（必填）
-                  // "REGISTER" - 注册
-                  // "RESET" - 重置密码
+                  // "register" - 注册
+                  // "reset" - 重置密码
 }
 ```
 
@@ -175,7 +175,7 @@ interface SendCodeDTO {
 ```json
 {
   "email": "test@example.com",
-  "type": "REGISTER"
+  "type": "register"
 }
 ```
 
@@ -418,19 +418,69 @@ interface PageVO<T> {
 
 ## 三、文章模块
 
-### 3.1 获取文章列表（公开）
+### 3.1 通用文章查询接口（公开）
 
-**接口地址**: `GET /api/article/list`
+**接口地址**: `POST /api/article/query`
 
-**接口描述**: 分页获取文章列表，支持按分类和关键词筛选
+**接口描述**: 通用文章查询接口，支持分类、标签、关键词搜索、排序
 
 **请求参数**:
-| 参数名 | 类型 | 必填 | 说明 |
-|--------|------|------|------|
-| pageNum | number | 否 | 页码，默认1 |
-| pageSize | number | 否 | 每页数量，默认10 |
-| categoryId | number | 否 | 分类ID |
-| keyword | string | 否 | 搜索关键词 |
+```typescript
+interface ArticleQueryDTO {
+  pageNum?: number;      // 页码，默认1
+  pageSize?: number;    // 每页数量，默认10
+  categoryId?: number;   // 分类ID
+  tagId?: number;       // 标签ID
+  keyword?: string;      // 搜索关键词
+  orderBy?: string;     // 排序方式，默认"latest"
+                        // "latest" - 最新
+                        // "hot" - 热门
+                        // "recommend" - 推荐
+}
+```
+
+**请求示例**:
+```json
+// 获取默认文章列表
+{}
+
+// 查询特定分类的文章
+{
+  "pageNum": 1,
+  "pageSize": 20,
+  "categoryId": 1
+}
+
+// 查询特定标签的文章
+{
+  "pageNum": 1,
+  "pageSize": 10,
+  "tagId": 5
+}
+
+// 关键字搜索
+{
+  "pageNum": 1,
+  "pageSize": 10,
+  "keyword": "Java"
+}
+
+// 组合查询（分类 + 关键字 + 热门排序）
+{
+  "pageNum": 1,
+  "pageSize": 10,
+  "categoryId": 1,
+  "keyword": "Spring Boot",
+  "orderBy": "hot"
+}
+
+// 查询推荐文章
+{
+  "pageNum": 1,
+  "pageSize": 10,
+  "orderBy": "recommend"
+}
+```
 
 **响应数据**:
 ```typescript
@@ -499,28 +549,7 @@ interface Article {
 
 ---
 
-### 3.2 根据标签获取文章列表（公开）
-
-**接口地址**: `GET /api/article/tag/{tagId}`
-
-**接口描述**: 根据标签ID获取文章列表
-
-**路径参数**:
-| 参数名 | 类型 | 说明 |
-|--------|------|------|
-| tagId | number | 标签ID |
-
-**请求参数**:
-| 参数名 | 类型 | 必填 | 说明 |
-|--------|------|------|------|
-| pageNum | number | 否 | 页码，默认1 |
-| pageSize | number | 否 | 每页数量，默认10 |
-
-**响应数据**: 同3.1
-
----
-
-### 3.3 获取文章详情（公开）
+### 3.2 获取文章详情（公开）
 
 **接口地址**: `GET /api/article/detail/{articleId}`
 
@@ -596,7 +625,7 @@ interface ArticleVO {
 
 ---
 
-### 3.4 创建文章
+### 3.3 创建文章
 
 **接口地址**: `POST /api/article/create`
 
@@ -648,13 +677,13 @@ interface ArticleDTO {
 
 ---
 
-### 3.5 更新文章
+### 3.4 更新文章
 
 **接口地址**: `PUT /api/article/update`
 
 **接口描述**: 更新文章（作者或管理员）
 
-**请求参数**: 同3.4，需要包含`id`字段
+**请求参数**: 同3.3，需要包含`id`字段
 
 **请求示例**:
 ```json
@@ -673,7 +702,7 @@ interface ArticleDTO {
 
 ---
 
-### 3.6 删除文章
+### 3.5 删除文章
 
 **接口地址**: `DELETE /api/article/delete/{articleId}`
 
@@ -688,7 +717,7 @@ interface ArticleDTO {
 
 ---
 
-### 3.7 点赞文章
+### 3.6 点赞文章
 
 **接口地址**: `POST /api/article/like/{articleId}`
 
@@ -703,7 +732,7 @@ interface ArticleDTO {
 
 ---
 
-### 3.8 取消点赞
+### 3.7 取消点赞
 
 **接口地址**: `DELETE /api/article/like/{articleId}`
 
@@ -718,7 +747,7 @@ interface ArticleDTO {
 
 ---
 
-### 3.9 收藏文章
+### 3.8 收藏文章
 
 **接口地址**: `POST /api/article/collect/{articleId}`
 
@@ -733,7 +762,7 @@ interface ArticleDTO {
 
 ---
 
-### 3.10 取消收藏
+### 3.9 取消收藏
 
 **接口地址**: `DELETE /api/article/collect/{articleId}`
 
@@ -748,7 +777,7 @@ interface ArticleDTO {
 
 ---
 
-### 3.11 获取热门文章（公开）
+### 3.10 获取热门文章（公开）
 
 **接口地址**: `GET /api/article/hot`
 
@@ -763,7 +792,7 @@ interface ArticleDTO {
 
 ---
 
-### 3.12 获取最新文章（公开）
+### 3.11 获取最新文章（公开）
 
 **接口地址**: `GET /api/article/latest`
 
@@ -778,7 +807,7 @@ interface ArticleDTO {
 
 ---
 
-### 3.13 获取推荐文章（公开）
+### 3.12 获取推荐文章（公开）
 
 **接口地址**: `GET /api/article/recommend`
 
@@ -793,7 +822,7 @@ interface ArticleDTO {
 
 ---
 
-### 3.14 获取我的文章列表
+### 3.13 获取我的文章列表
 
 **接口地址**: `GET /api/article/my`
 
@@ -810,7 +839,7 @@ interface ArticleDTO {
 
 ---
 
-### 3.15 获取我的收藏列表
+### 3.14 获取我的收藏列表
 
 **接口地址**: `GET /api/article/my-collects`
 
@@ -1382,46 +1411,57 @@ axios.interceptors.response.use(
 );
 ```
 
-### 3. 分页组件封装
+### 3. 文章查询接口使用示例
 
 ```javascript
-// 分页查询函数
-const fetchPageData = async (pageNum, pageSize, ...otherParams) => {
-  const response = await axios.get('/api/article/list', {
-    params: {
-      pageNum,
-      pageSize,
-      ...otherParams
-    }
-  });
+// 使用新的 POST /api/article/query 接口
+const queryArticles = async (queryParams = {}) => {
+  const response = await axios.post('/api/article/query', queryParams);
   return response.data;
 };
 
-// 分页组件使用
-const handlePageChange = (pageNum) => {
-  fetchPageData(pageNum, pageSize, categoryId, keyword);
-};
+// 获取默认文章列表
+queryArticles({});
+
+// 查询特定分类的文章
+queryArticles({
+  pageNum: 1,
+  pageSize: 20,
+  categoryId: 1
+});
+
+// 查询特定标签的文章
+queryArticles({
+  pageNum: 1,
+  pageSize: 10,
+  tagId: 5
+});
+
+// 关键字搜索
+queryArticles({
+  pageNum: 1,
+  pageSize: 10,
+  keyword: 'Java'
+});
+
+// 组合查询（分类 + 关键字 + 热门排序）
+queryArticles({
+  pageNum: 1,
+  pageSize: 10,
+  categoryId: 1,
+  keyword: 'Spring Boot',
+  orderBy: 'hot'
+});
+
+// 查询推荐文章
+queryArticles({
+  pageNum: 1,
+  pageSize: 10,
+  orderBy: 'recommend'
+});
 ```
 
-### 4. 文件上传
-
-```javascript
-// 上传图片
-const uploadImage = async (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  
-  const response = await axios.post('/api/upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
-  
-  return response.data.data; // 返回图片URL
-};
-```
-
-### 5. 验证码倒计时
+### 4. 验证码倒计时
 
 ```javascript
 const [countdown, setCountdown] = useState(0);
@@ -1446,7 +1486,7 @@ const sendCode = async (email, type) => {
 };
 ```
 
-### 6. 表单验证
+### 5. 表单验证
 
 ```javascript
 // 注册表单验证
@@ -1507,6 +1547,12 @@ A: 推荐功能基于以下算法：
 3. 热度加权：考虑文章的浏览量和点赞数
 4. 时间衰减：新发布的文章获得更高的推荐权重
 
+### Q6: 文章查询接口为什么用POST？
+A: 使用POST方式是因为：
+1. 查询条件包含多个可选参数，使用POST + RequestBody更清晰
+2. 避免GET请求URL过长的问题
+3. 支持更复杂的查询条件扩展
+
 ---
 
 ## 更新日志
@@ -1514,6 +1560,7 @@ A: 推荐功能基于以下算法：
 | 版本 | 日期 | 更新内容 |
 |-----|------|---------|
 | v1.0 | 2026-03-11 | 初始版本，包含所有模块接口 |
+| v1.1 | 2026-03-11 | 修正文章查询接口，使用POST /api/article/query |
 
 ---
 

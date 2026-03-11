@@ -1,6 +1,7 @@
 package com.ykw.blog_system.service;
 
 import com.ykw.blog_system.dto.ArticleDTO;
+import com.ykw.blog_system.dto.ArticleQueryDTO;
 import com.ykw.blog_system.entity.Article;
 import com.ykw.blog_system.vo.ArticleVO;
 import com.ykw.blog_system.vo.PageVO;

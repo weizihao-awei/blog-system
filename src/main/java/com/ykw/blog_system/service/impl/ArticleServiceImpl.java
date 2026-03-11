@@ -3,6 +3,7 @@ package com.ykw.blog_system.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.ykw.blog_system.dto.ArticleDTO;
+import com.ykw.blog_system.dto.ArticleQueryDTO;
 import com.ykw.blog_system.entity.*;
 import com.ykw.blog_system.mapper.*;
 import com.ykw.blog_system.service.ArticleService;
