@@ -114,7 +114,6 @@
         LEFT JOIN category c ON a.category_id = c.id
         WHERE a.status = 1
         ORDER BY a.view_count DESC, a.like_count DESC
-        LIMIT #{limit}
     </select>
     
     <select id="selectLatestArticles" resultMap="ArticleWithAuthorResultMap">
@@ -127,7 +126,6 @@
         LEFT JOIN category c ON a.category_id = c.id
         WHERE a.status = 1
         ORDER BY a.publish_time DESC
-        LIMIT #{limit}
     </select>
     
     <select id="selectRecommendArticles" resultMap="ArticleWithAuthorResultMap">

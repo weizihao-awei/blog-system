@@ -112,29 +112,35 @@ public class ArticleController {
     /**
      * 获取热门文章
      */
-    @GetMapping("/hot")
-    public ResultVO<List<Article>> getHotArticles(
-            @RequestParam(defaultValue = "10") Integer limit) {
-        return articleService.getHotArticles(limit);
+    @PostMapping("/hot")
+    public ResultVO<PageVO<Article>> getHotArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
+        if (queryDTO == null) {
+            queryDTO = new ArticleQueryDTO();
+        }
+        return articleService.getHotArticles(queryDTO);
     }
     
     /**
      * 获取最新文章
      */
-    @GetMapping("/latest")
-    public ResultVO<List<Article>> getLatestArticles(
-            @RequestParam(defaultValue = "10") Integer limit) {
-        return articleService.getLatestArticles(limit);
+    @PostMapping("/latest")
+    public ResultVO<PageVO<Article>> getLatestArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
+        if (queryDTO == null) {
+            queryDTO = new ArticleQueryDTO();
+        }
+        return articleService.getLatestArticles(queryDTO);
     }
     
     /**
      * 获取推荐文章
      */
-    @GetMapping("/recommend")
-    public ResultVO<List<Article>> getRecommendArticles(
-            @RequestParam(defaultValue = "10") Integer limit) {
+    @PostMapping("/recommend")
+    public ResultVO<PageVO<Article>> getRecommendArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
+        if (queryDTO == null) {
+            queryDTO = new ArticleQueryDTO();
+        }
         Long userId = SecurityUtil.getCurrentUserId();
-        return articleService.getRecommendArticles(userId, limit);
+        return articleService.getRecommendArticles(userId, queryDTO);
     }
     
     /**

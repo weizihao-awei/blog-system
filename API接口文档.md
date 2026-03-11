@@ -779,46 +779,133 @@ interface ArticleDTO {
 
 ### 3.10 获取热门文章（公开）
 
-**接口地址**: `GET /api/article/hot`
+**接口地址**: `POST /api/article/hot`
 
-**接口描述**: 获取浏览量最高的文章
+**接口描述**: 获取浏览量最高的文章，支持分页
 
 **请求参数**:
-| 参数名 | 类型 | 必填 | 说明 |
-|--------|------|------|------|
-| limit | number | 否 | 返回数量，默认10 |
+```typescript
+interface ArticleQueryDTO {
+  pageNum?: number;      // 页码，默认1
+  pageSize?: number;    // 每页数量，默认10
+}
+```
 
-**响应数据**: `Article[]`
+**请求示例**:
+```json
+{
+  "pageNum": 1,
+  "pageSize": 10
+}
+```
+
+**响应数据**: `PageVO<Article>`
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    "list": [...],
+    "total": 100,
+    "pageNum": 1,
+    "pageSize": 10,
+    "totalPages": 10,
+    "hasNextPage": true,
+    "hasPreviousPage": false
+  },
+  "timestamp": 1746518400000
+}
+```
 
 ---
 
 ### 3.11 获取最新文章（公开）
 
-**接口地址**: `GET /api/article/latest`
+**接口地址**: `POST /api/article/latest`
 
-**接口描述**: 获取最新发布的文章
+**接口描述**: 获取最新发布的文章，支持分页
 
 **请求参数**:
-| 参数名 | 类型 | 必填 | 说明 |
-|--------|------|------|------|
-| limit | number | 否 | 返回数量，默认10 |
+```typescript
+interface ArticleQueryDTO {
+  pageNum?: number;      // 页码，默认1
+  pageSize?: number;    // 每页数量，默认10
+}
+```
 
-**响应数据**: `Article[]`
+**请求示例**:
+```json
+{
+  "pageNum": 1,
+  "pageSize": 10
+}
+```
+
+**响应数据**: `PageVO<Article>`
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    "list": [...],
+    "total": 100,
+    "pageNum": 1,
+    "pageSize": 10,
+    "totalPages": 10,
+    "hasNextPage": true,
+    "hasPreviousPage": false
+  },
+  "timestamp": 1746518400000
+}
+```
 
 ---
 
 ### 3.12 获取推荐文章（公开）
 
-**接口地址**: `GET /api/article/recommend`
+**接口地址**: `POST /api/article/recommend`
 
-**接口描述**: 获取个性化推荐的文章（基于用户行为分析）
+**接口描述**: 获取个性化推荐的文章（基于用户行为分析），支持分页
 
 **请求参数**:
-| 参数名 | 类型 | 必填 | 说明 |
-|--------|------|------|------|
-| limit | number | 否 | 返回数量，默认10 |
+```typescript
+interface ArticleQueryDTO {
+  pageNum?: number;      // 页码，默认1
+  pageSize?: number;    // 每页数量，默认10
+}
+```
 
-**响应数据**: `Article[]`
+**请求示例**:
+```json
+{
+  "pageNum": 1,
+  "pageSize": 10
+}
+```
+
+**响应数据**: `PageVO<Article>`
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    "list": [...],
+    "total": 100,
+    "pageNum": 1,
+    "pageSize": 10,
+    "totalPages": 10,
+    "hasNextPage": true,
+    "hasPreviousPage": false
+  },
+  "timestamp": 1746518400000
+}
+```
 
 ---
 
@@ -1459,6 +1546,33 @@ queryArticles({
   pageSize: 10,
   orderBy: 'recommend'
 });
+
+// 获取热门文章（分页）
+const getHotArticles = async (pageNum = 1, pageSize = 10) => {
+  const response = await axios.post('/api/article/hot', {
+    pageNum,
+    pageSize
+  });
+  return response.data;
+};
+
+// 获取最新文章（分页）
+const getLatestArticles = async (pageNum = 1, pageSize = 10) => {
+  const response = await axios.post('/api/article/latest', {
+    pageNum,
+    pageSize
+  });
+  return response.data;
+};
+
+// 获取推荐文章（分页）
+const getRecommendArticles = async (pageNum = 1, pageSize = 10) => {
+  const response = await axios.post('/api/article/recommend', {
+    pageNum,
+    pageSize
+  });
+  return response.data;
+};
 ```
 
 ### 4. 验证码倒计时
@@ -1553,6 +1667,13 @@ A: 使用POST方式是因为：
 2. 避免GET请求URL过长的问题
 3. 支持更复杂的查询条件扩展
 
+### Q7: 热门、最新、推荐文章接口为什么改为POST？
+A: 改为POST方式的原因：
+1. 统一接口风格，与通用查询接口保持一致
+2. 支持分页查询，不再限制返回数量
+3. 使用RequestBody传递分页参数更加规范
+4. 便于后续扩展更多查询条件
+
 ---
 
 ## 更新日志
@@ -1561,6 +1682,7 @@ A: 使用POST方式是因为：
 |-----|------|---------|
 | v1.0 | 2026-03-11 | 初始版本，包含所有模块接口 |
 | v1.1 | 2026-03-11 | 修正文章查询接口，使用POST /api/article/query |
+| v1.2 | 2026-03-11 | 修改热门、最新、推荐文章接口为POST方法，并支持分页查询 |
 
 ---
 

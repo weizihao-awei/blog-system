@@ -35,11 +35,11 @@ public interface ArticleService {
     
     ResultVO<Void> uncollectArticle(Long articleId, Long userId);
     
-    ResultVO<List<Article>> getHotArticles(Integer limit);
+    ResultVO<PageVO<Article>> getHotArticles(ArticleQueryDTO queryDTO);
     
-    ResultVO<List<Article>> getLatestArticles(Integer limit);
+    ResultVO<PageVO<Article>> getLatestArticles(ArticleQueryDTO queryDTO);
     
-    ResultVO<List<Article>> getRecommendArticles(Long userId, Integer limit);
+    ResultVO<PageVO<Article>> getRecommendArticles(Long userId, ArticleQueryDTO queryDTO);
     
     ResultVO<PageVO<Article>> getMyArticles(Long userId, Integer pageNum, Integer pageSize, Integer status);
     

@@ -312,59 +312,75 @@ public class ArticleServiceImpl implements ArticleService {
     }
     
     @Override
-    public ResultVO<List<Article>> getHotArticles(Integer limit) {
-        List<Article> list = articleMapper.selectHotArticles(limit);
+    public ResultVO<PageVO<Article>> getHotArticles(ArticleQueryDTO queryDTO) {
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+        List<Article> list = articleMapper.selectHotArticles(null);
+        PageInfo<Article> pageInfo = new PageInfo<>(list);
+        
         for (Article article : list) {
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
             article.setTags(tags);
         }
-        return ResultVO.success(list);
+        
+        PageVO<Article> pageVO = new PageVO<>(list, pageInfo.getTotal(), 
+                                               queryDTO.getPageNum(), queryDTO.getPageSize());
+        return ResultVO.success(pageVO);
     }
     
     @Override
-    public ResultVO<List<Article>> getLatestArticles(Integer limit) {
-        List<Article> list = articleMapper.selectLatestArticles(limit);
+    public ResultVO<PageVO<Article>> getLatestArticles(ArticleQueryDTO queryDTO) {
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+        List<Article> list = articleMapper.selectLatestArticles(null);
+        PageInfo<Article> pageInfo = new PageInfo<>(list);
+        
         for (Article article : list) {
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
             article.setTags(tags);
         }
-        return ResultVO.success(list);
+        
+        PageVO<Article> pageVO = new PageVO<>(list, pageInfo.getTotal(), 
+                                               queryDTO.getPageNum(), queryDTO.getPageSize());
+        return ResultVO.success(pageVO);
     }
     
     @Override
-    public ResultVO<List<Article>> getRecommendArticles(Long userId, Integer limit) {
+    public ResultVO<PageVO<Article>> getRecommendArticles(Long userId, ArticleQueryDTO queryDTO) {
         List<Article> recommendArticles = new ArrayList<>();
         
         if (userId != null) {
-            // 获取用户行为数据
             List<UserBehavior> userBehaviors = userBehaviorMapper.selectByUserId(userId);
             
             if (!userBehaviors.isEmpty()) {
-                // 基于协同过滤的推荐算法
-                recommendArticles = getCollaborativeFilteringRecommendations(userId, limit);
+                recommendArticles = getCollaborativeFilteringRecommendations(userId, null);
             }
         }
         
-        // 如果推荐文章不足，补充热门文章
-        if (recommendArticles.size() < limit) {
-            List<Article> hotArticles = articleMapper.selectHotArticles(limit);
+        if (recommendArticles.size() < queryDTO.getPageSize()) {
+            List<Article> hotArticles = articleMapper.selectHotArticles(null);
             for (Article article : hotArticles) {
                 if (recommendArticles.stream().noneMatch(a -> a.getId().equals(article.getId()))) {
                     recommendArticles.add(article);
-                    if (recommendArticles.size() >= limit) {
-                        break;
-                    }
                 }
             }
         }
         
-        // 加载标签
-        for (Article article : recommendArticles) {
+        int total = recommendArticles.size();
+        int startIndex = (queryDTO.getPageNum() - 1) * queryDTO.getPageSize();
+        int endIndex = Math.min(startIndex + queryDTO.getPageSize(), total);
+        
+        List<Article> pagedArticles = new ArrayList<>();
+        if (startIndex < total) {
+            pagedArticles = recommendArticles.subList(startIndex, endIndex);
+        }
+        
+        for (Article article : pagedArticles) {
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
             article.setTags(tags);
         }
         
-        return ResultVO.success(recommendArticles);
+        PageVO<Article> pageVO = new PageVO<>(pagedArticles, (long) total, 
+                                               queryDTO.getPageNum(), queryDTO.getPageSize());
+        return ResultVO.success(pageVO);
     }
     
     /**
