@@ -124,16 +124,17 @@
         FROM article a
         LEFT JOIN user u ON a.author_id = u.id
         LEFT JOIN category c ON a.category_id = c.id
-        <if test="tagId != null">
+        <if test="queryDTO.tagId != null">
             INNER JOIN article_tag at ON a.id = at.article_id
         </if>
         <where>
             a.status = 1
-            <if test="categoryId != null">
-                AND a.category_id = #{categoryId}
+            AND a.publish_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            <if test="queryDTO.categoryId != null">
+                AND a.category_id = #{queryDTO.categoryId}
             </if>
-            <if test="tagId != null">
-                AND at.tag_id = #{tagId}
+            <if test="queryDTO.tagId != null">
+                AND at.tag_id = #{queryDTO.tagId}
             </if>
         </where>
         ORDER BY a.is_top DESC, a.publish_time DESC
