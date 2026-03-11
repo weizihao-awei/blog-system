@@ -38,11 +38,6 @@ mybatis:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-pagehelper:
-  helperDialect: mysql
-  reasonable: true
-  support-methods-arguments: true
-  params: count=countSql
 
 jwt:
   secret: blogSystemSecretKeyForJwtTokenGenerationAndValidation2024

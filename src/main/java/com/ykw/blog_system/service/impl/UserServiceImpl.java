@@ -1,7 +1,7 @@
 package com.ykw.blog_system.service.impl;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.entity.User;
 import com.ykw.blog_system.mapper.UserMapper;
 import com.ykw.blog_system.service.UserService;
@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
             }
         }
         
-        userMapper.update(user);
+        userMapper.updateById(user);
         return ResultVO.success();
     }
     
@@ -66,21 +66,28 @@ public class UserServiceImpl implements UserService {
         }
         
         user.setPassword(passwordEncoder.encode(newPassword));
-        userMapper.update(user);
+        userMapper.updateById(user);
         
         return ResultVO.success();
     }
     
     @Override
     public ResultVO<PageVO<User>> getUserList(Integer pageNum, Integer pageSize, String keyword) {
-        PageHelper.startPage(pageNum, pageSize);
-        List<User> list = userMapper.selectList(keyword);
-        PageInfo<User> pageInfo = new PageInfo<>(list);
+        Page<User> page = new Page<>(pageNum, pageSize);
         
-        // 清除密码
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        if (keyword != null && !keyword.isEmpty()) {
+            wrapper.and(w -> w.like(User::getUsername, keyword)
+                    .or().like(User::getNickname, keyword));
+        }
+        wrapper.orderByDesc(User::getCreateTime);
+        
+        Page<User> pageResult = userMapper.selectPage(page, wrapper);
+        List<User> list = pageResult.getRecords();
+        
         list.forEach(user -> user.setPassword(null));
         
-        PageVO<User> pageVO = new PageVO<>(list, pageInfo.getTotal(), pageNum, pageSize);
+        PageVO<User> pageVO = new PageVO<>(list, pageResult.getTotal(), pageNum, pageSize);
         return ResultVO.success(pageVO);
     }
     
@@ -89,7 +96,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setId(userId);
         user.setStatus(status);
-        userMapper.update(user);
+        userMapper.updateById(user);
         return ResultVO.success();
     }
     

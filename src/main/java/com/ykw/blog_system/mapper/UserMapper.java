@@ -1,30 +1,20 @@
 package com.ykw.blog_system.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.ykw.blog_system.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
-import java.util.List;
-
-/**
- * 用户Mapper接口
- */
 @Mapper
-public interface UserMapper {
-    
-    User selectById(Long id);
-    
+public interface UserMapper extends BaseMapper<User> {
+
+    @Select("SELECT * FROM user WHERE username = #{username}")
     User selectByUsername(String username);
-    
+
+    @Select("SELECT * FROM user WHERE email = #{email}")
     User selectByEmail(String email);
-    
-    int insert(User user);
-    
-    int update(User user);
-    
-    int deleteById(Long id);
-    
-    List<User> selectList(@Param("keyword") String keyword);
-    
+
+    @Select("SELECT COUNT(*) FROM user WHERE status = 1")
     Long countUsers();
 }
