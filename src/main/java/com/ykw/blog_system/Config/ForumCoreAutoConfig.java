@@ -1,4 +1,4 @@
-package com.ykw.blog_system.config;
+package com.ykw.blog_system.Config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;
