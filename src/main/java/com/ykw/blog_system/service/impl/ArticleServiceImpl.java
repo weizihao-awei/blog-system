@@ -330,7 +330,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ResultVO<PageVO<Article>> getLatestArticles(ArticleQueryDTO queryDTO) {
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
-        List<Article> list = articleMapper.selectLatestArticles(null);
+        List<Article> list = articleMapper.selectLatestArticles(queryDTO);
         PageInfo<Article> pageInfo = new PageInfo<>(list);
         
         for (Article article : list) {

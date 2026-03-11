@@ -23,6 +23,17 @@ public class ArticleController {
     
     @Autowired
     private ArticleService articleService;
+
+    /**
+     * 获取最新文章
+     */
+    @PostMapping("/latest")
+    public ResultVO<PageVO<Article>> getLatestArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
+        if (queryDTO == null) {
+            queryDTO = new ArticleQueryDTO();
+        }
+        return articleService.getLatestArticles(queryDTO);
+    }
     
     /**
      * 通用文章查询接口（POST）
@@ -120,16 +131,7 @@ public class ArticleController {
         return articleService.getHotArticles(queryDTO);
     }
     
-    /**
-     * 获取最新文章
-     */
-    @PostMapping("/latest")
-    public ResultVO<PageVO<Article>> getLatestArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
-        if (queryDTO == null) {
-            queryDTO = new ArticleQueryDTO();
-        }
-        return articleService.getLatestArticles(queryDTO);
-    }
+
     
     /**
      * 获取推荐文章

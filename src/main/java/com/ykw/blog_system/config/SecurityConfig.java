@@ -83,6 +83,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/comment/list/**").permitAll()
                 .requestMatchers("/api/statistics").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/api/**").authenticated()
                 // 其他接口需要认证
                 .anyRequest().authenticated()
             )

@@ -1,5 +1,6 @@
 package com.ykw.blog_system.mapper;
 
+import com.ykw.blog_system.dto.ArticleQueryDTO;
 import com.ykw.blog_system.entity.Article;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -34,7 +35,7 @@ public interface ArticleMapper {
     
     List<Article> selectHotArticles(@Param("limit") Integer limit);
     
-    List<Article> selectLatestArticles(@Param("limit") Integer limit);
+
     
     List<Article> selectRecommendArticles(@Param("limit") Integer limit);
     
@@ -47,4 +48,6 @@ public interface ArticleMapper {
     Long countArticles(@Param("status") Integer status);
     
     Long sumViewCount();
+
+    List<Article> selectLatestArticles(@Param("queryDTO") ArticleQueryDTO queryDTO);
 }

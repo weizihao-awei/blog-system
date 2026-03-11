@@ -1,5 +1,4 @@
 package com.ykw.blog_system.mapper;
-
 import com.ykw.blog_system.entity.ArticleCollect;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
