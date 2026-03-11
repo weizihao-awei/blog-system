@@ -1,7 +1,7 @@
 package com.ykw.blog_system.service.impl;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.dto.ArticleDTO;
 import com.ykw.blog_system.dto.ArticleQueryDTO;
 import com.ykw.blog_system.entity.*;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,46 +49,37 @@ public class ArticleServiceImpl implements ArticleService {
     
     @Override
     public ResultVO<PageVO<Article>> queryArticles(ArticleQueryDTO queryDTO) {
-        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+        Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         
-        List<Article> list;
+        LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Article::getStatus, 1);
         
-        // 根据标签 ID 查询
-        if (queryDTO.getTagId() != null) {
-            list = articleMapper.selectByTagId(queryDTO.getTagId(), 1);
-        } 
-        // 根据分类和关键字查询
-        else {
-            list = articleMapper.selectList(1, queryDTO.getCategoryId(), queryDTO.getKeyword());
+        if (queryDTO.getCategoryId() != null) {
+            wrapper.eq(Article::getCategoryId, queryDTO.getCategoryId());
         }
         
-        PageInfo<Article> pageInfo = new PageInfo<>(list);
+        if (queryDTO.getKeyword() != null && !queryDTO.getKeyword().isEmpty()) {
+            wrapper.and(w -> w.like(Article::getTitle, queryDTO.getKeyword())
+                    .or().like(Article::getSummary, queryDTO.getKeyword()));
+        }
         
-        // 加载标签
+        if ("hot".equals(queryDTO.getOrderBy())) {
+            wrapper.orderByDesc(Article::getViewCount, Article::getLikeCount);
+        } else if ("recommend".equals(queryDTO.getOrderBy())) {
+            wrapper.orderByDesc(Article::getIsRecommend, Article::getPublishTime);
+        } else {
+            wrapper.orderByDesc(Article::getIsTop, Article::getPublishTime);
+        }
+        
+        Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
+        List<Article> list = pageResult.getRecords();
+        
         for (Article article : list) {
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
             article.setTags(tags);
         }
         
-        // 根据排序方式排序
-        if ("hot".equals(queryDTO.getOrderBy())) {
-            // 热门排序：按浏览量和点赞数
-            list.sort((a1, a2) -> {
-                int viewCompare = a2.getViewCount().compareTo(a1.getViewCount());
-                if (viewCompare != 0) return viewCompare;
-                return a2.getLikeCount().compareTo(a1.getLikeCount());
-            });
-        } else if ("recommend".equals(queryDTO.getOrderBy())) {
-            // 推荐排序：按推荐标志和发布时间
-            list.sort((a1, a2) -> {
-                int recommendCompare = a2.getIsRecommend().compareTo(a1.getIsRecommend());
-                if (recommendCompare != 0) return recommendCompare;
-                return a2.getPublishTime().compareTo(a1.getPublishTime());
-            });
-        }
-        // 默认最新排序（按发布时间）
-        
-        PageVO<Article> pageVO = new PageVO<>(list, pageInfo.getTotal(), 
+        PageVO<Article> pageVO = new PageVO<>(list, pageResult.getTotal(), 
                                                queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
     }
@@ -99,18 +91,17 @@ public class ArticleServiceImpl implements ArticleService {
             return ResultVO.error("文章不存在");
         }
         
-        // 增加浏览次数
-        articleMapper.increaseViewCount(articleId);
+        articleMapper.update(null, 
+            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
+                .setSql("view_count = view_count + 1")
+                .eq(Article::getId, articleId));
         
-        // 记录用户浏览行为
         if (currentUserId != null) {
             recordUserBehavior(currentUserId, articleId, "view", new BigDecimal("1.0"));
         }
         
-        // 加载标签
         List<Tag> tags = tagMapper.selectByArticleId(articleId);
         
-        // 检查是否已点赞、已收藏
         Boolean isLiked = false;
         Boolean isCollected = false;
         if (currentUserId != null) {
@@ -124,7 +115,6 @@ public class ArticleServiceImpl implements ArticleService {
         ArticleVO articleVO = new ArticleVO();
         BeanUtils.copyProperties(article, articleVO);
         
-        // 转换标签
         List<TagVO> tagVOList = tags.stream().map(tag -> {
             TagVO tagVO = new TagVO();
             BeanUtils.copyProperties(tag, tagVO);
@@ -150,9 +140,16 @@ public class ArticleServiceImpl implements ArticleService {
         
         articleMapper.insert(article);
         
-        // 保存标签关联
         if (articleDTO.getTagIds() != null && !articleDTO.getTagIds().isEmpty()) {
-            articleTagMapper.insertBatch(article.getId(), articleDTO.getTagIds());
+            List<ArticleTag> articleTags = articleDTO.getTagIds().stream()
+                    .map(tagId -> {
+                        ArticleTag articleTag = new ArticleTag();
+                        articleTag.setArticleId(article.getId());
+                        articleTag.setTagId(tagId);
+                        return articleTag;
+                    })
+                    .collect(Collectors.toList());
+            articleTags.forEach(articleTagMapper::insert);
         }
         
         return ResultVO.success("创建成功", article.getId());
@@ -166,18 +163,24 @@ public class ArticleServiceImpl implements ArticleService {
             return ResultVO.error("文章不存在");
         }
         
-        // 检查权限
         if (!article.getAuthorId().equals(currentUserId) && !SecurityUtil.isAdmin()) {
             return ResultVO.error("无权修改此文章");
         }
         
         BeanUtils.copyProperties(articleDTO, article);
-        articleMapper.update(article);
+        articleMapper.updateById(article);
         
-        // 更新标签关联
         articleTagMapper.deleteByArticleId(article.getId());
         if (articleDTO.getTagIds() != null && !articleDTO.getTagIds().isEmpty()) {
-            articleTagMapper.insertBatch(article.getId(), articleDTO.getTagIds());
+            List<ArticleTag> articleTags = articleDTO.getTagIds().stream()
+                    .map(tagId -> {
+                        ArticleTag articleTag = new ArticleTag();
+                        articleTag.setArticleId(article.getId());
+                        articleTag.setTagId(tagId);
+                        return articleTag;
+                    })
+                    .collect(Collectors.toList());
+            articleTags.forEach(articleTagMapper::insert);
         }
         
         return ResultVO.success();
@@ -217,26 +220,26 @@ public class ArticleServiceImpl implements ArticleService {
         }
         
         if (existingFoot == null) {
-            // 创建新的足迹记录
             UserFoot userFoot = new UserFoot();
             userFoot.setUserId(userId);
             userFoot.setDocumentId(articleId);
-            userFoot.setDocumentType(1); // 1-文章
+            userFoot.setDocumentType(1);
             userFoot.setDocumentUserId(article.getAuthorId());
-            userFoot.setPraiseStat(1); // 1-已点赞
-            userFoot.setReadStat(1); // 标记为已读
+            userFoot.setPraiseStat(1);
+            userFoot.setReadStat(1);
             userFoot.setCollectionStat(0);
             userFoot.setCommentStat(0);
             userFootMapper.insert(userFoot);
         } else {
-            // 更新点赞状态
             existingFoot.setPraiseStat(1);
-            userFootMapper.update(existingFoot);
+            userFootMapper.updateById(existingFoot);
         }
         
-        articleMapper.increaseLikeCount(articleId, 1);
+        articleMapper.update(null, 
+            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
+                .setSql("like_count = like_count + 1")
+                .eq(Article::getId, articleId));
         
-        // 记录用户点赞行为
         recordUserBehavior(userId, articleId, "like", new BigDecimal("3.0"));
         
         return ResultVO.success();
@@ -250,11 +253,13 @@ public class ArticleServiceImpl implements ArticleService {
             return ResultVO.error("未点赞过");
         }
         
-        // 更新点赞状态为取消
-        existingFoot.setPraiseStat(2); // 2-取消点赞
-        userFootMapper.update(existingFoot);
+        existingFoot.setPraiseStat(2);
+        userFootMapper.updateById(existingFoot);
         
-        articleMapper.increaseLikeCount(articleId, -1);
+        articleMapper.update(null, 
+            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
+                .setSql("like_count = like_count - 1")
+                .eq(Article::getId, articleId));
         
         return ResultVO.success();
     }
@@ -273,24 +278,26 @@ public class ArticleServiceImpl implements ArticleService {
         }
         
         if (existingFoot == null) {
-            // 创建新的足迹记录
             UserFoot userFoot = new UserFoot();
             userFoot.setUserId(userId);
             userFoot.setDocumentId(articleId);
-            userFoot.setDocumentType(1); // 1-文章
+            userFoot.setDocumentType(1);
             userFoot.setDocumentUserId(article.getAuthorId());
-            userFoot.setCollectionStat(1); // 1-已收藏
-            userFoot.setReadStat(1); // 标记为已读
+            userFoot.setCollectionStat(1);
+            userFoot.setReadStat(1);
             userFoot.setPraiseStat(0);
             userFoot.setCommentStat(0);
             userFootMapper.insert(userFoot);
         } else {
-            // 更新收藏状态
             existingFoot.setCollectionStat(1);
-            userFootMapper.update(existingFoot);
+            userFootMapper.updateById(existingFoot);
         }
         
-        // 记录用户收藏行为
+        articleMapper.update(null, 
+            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
+                .setSql("collection_count = collection_count + 1")
+                .eq(Article::getId, articleId));
+        
         recordUserBehavior(userId, articleId, "collect", new BigDecimal("5.0"));
         
         return ResultVO.success();
@@ -304,41 +311,79 @@ public class ArticleServiceImpl implements ArticleService {
             return ResultVO.error("未收藏过");
         }
         
-        // 更新收藏状态为取消
-        existingFoot.setCollectionStat(2); // 2-取消收藏
-        userFootMapper.update(existingFoot);
+        existingFoot.setCollectionStat(2);
+        userFootMapper.updateById(existingFoot);
+        
+        articleMapper.update(null, 
+            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
+                .setSql("collection_count = collection_count - 1")
+                .eq(Article::getId, articleId));
         
         return ResultVO.success();
     }
     
     @Override
     public ResultVO<PageVO<Article>> getHotArticles(ArticleQueryDTO queryDTO) {
-        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
-        List<Article> list = articleMapper.selectHotArticles(null);
-        PageInfo<Article> pageInfo = new PageInfo<>(list);
+        Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         
+        LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Article::getStatus, 1)
+                .orderByDesc(Article::getViewCount, Article::getLikeCount);
+        
+        // 分类 ID 过滤
+        if (queryDTO.getCategoryId() != null) {
+            wrapper.eq(Article::getCategoryId, queryDTO.getCategoryId());
+        }
+        
+        // 关键字过滤
+        if (queryDTO.getKeyword() != null && !queryDTO.getKeyword().isEmpty()) {
+            wrapper.and(w -> w.like(Article::getTitle, queryDTO.getKeyword())
+                    .or().like(Article::getSummary, queryDTO.getKeyword()));
+        }
+        
+        Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
+        List<Article> list = pageResult.getRecords();
+        
+        // 加载标签
         for (Article article : list) {
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
             article.setTags(tags);
         }
         
-        PageVO<Article> pageVO = new PageVO<>(list, pageInfo.getTotal(), 
+        PageVO<Article> pageVO = new PageVO<>(list, pageResult.getTotal(), 
                                                queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
     }
     
     @Override
     public ResultVO<PageVO<Article>> getLatestArticles(ArticleQueryDTO queryDTO) {
-        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
-        List<Article> list = articleMapper.selectLatestArticles(queryDTO);
-        PageInfo<Article> pageInfo = new PageInfo<>(list);
+        Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         
+        LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Article::getStatus, 1)
+                .orderByDesc(Article::getIsTop, Article::getPublishTime);
+        
+        // 分类 ID 过滤
+        if (queryDTO.getCategoryId() != null) {
+            wrapper.eq(Article::getCategoryId, queryDTO.getCategoryId());
+        }
+        
+        // 关键字过滤
+        if (queryDTO.getKeyword() != null && !queryDTO.getKeyword().isEmpty()) {
+            wrapper.and(w -> w.like(Article::getTitle, queryDTO.getKeyword())
+                    .or().like(Article::getSummary, queryDTO.getKeyword()));
+        }
+        
+        Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
+        List<Article> list = pageResult.getRecords();
+        
+        // 加载标签
         for (Article article : list) {
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
             article.setTags(tags);
         }
         
-        PageVO<Article> pageVO = new PageVO<>(list, pageInfo.getTotal(), 
+        PageVO<Article> pageVO = new PageVO<>(list, pageResult.getTotal(), 
                                                queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
     }
@@ -400,9 +445,9 @@ public class ArticleServiceImpl implements ArticleService {
             List<Tag> tags = tagMapper.selectByArticleId(articleId);
             interestedTagIds.addAll(tags.stream().map(Tag::getId).collect(Collectors.toList()));
         }
-        
-        // 根据标签权重排序获取推荐文章
-        List<Article> allArticles = articleMapper.selectList(1, null, null);
+        // 获取所有文章（排除已删除的），用于计算推荐得分
+        List<Article> allArticles = articleMapper.selectList(new LambdaQueryWrapper<Article>()
+                .eq(Article::getStatus, 1));
         List<Article> scoredArticles = new ArrayList<>();
         
         for (Article article : allArticles) {
@@ -453,35 +498,47 @@ public class ArticleServiceImpl implements ArticleService {
     
     @Override
     public ResultVO<PageVO<Article>> getMyArticles(Long userId, Integer pageNum, Integer pageSize, Integer status) {
-        PageHelper.startPage(pageNum, pageSize);
-        List<Article> list = articleMapper.selectByUserId(userId, status);
-        PageInfo<Article> pageInfo = new PageInfo<>(list);
+        Page<Article> page = new Page<>(pageNum, pageSize);
+        
+        LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Article::getAuthorId, userId);
+        if (status != null) {
+            wrapper.eq(Article::getStatus, status);
+        }
+        wrapper.orderByDesc(Article::getCreateTime);
+        
+        Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
+        List<Article> list = pageResult.getRecords();
         
         for (Article article : list) {
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
             article.setTags(tags);
         }
         
-        PageVO<Article> pageVO = new PageVO<>(list, pageInfo.getTotal(), pageNum, pageSize);
+        PageVO<Article> pageVO = new PageVO<>(list, pageResult.getTotal(), pageNum, pageSize);
         return ResultVO.success(pageVO);
     }
     
     @Override
     public ResultVO<PageVO<Article>> getMyCollects(Long userId, Integer pageNum, Integer pageSize) {
-        PageHelper.startPage(pageNum, pageSize);
-        List<UserFoot> foots = userFootMapper.selectByUserIdAndType(userId, 1); // 1-文章
+        Page<Article> page = new Page<>(pageNum, pageSize);
         
-        List<Article> articles = new ArrayList<>();
-        for (UserFoot foot : foots) {
-            Article article = articleMapper.selectByIdWithTags(foot.getDocumentId());
-            if (article != null && article.getStatus() == 1) {
-                List<Tag> tags = tagMapper.selectByArticleId(article.getId());
-                article.setTags(tags);
-                articles.add(article);
-            }
+        LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
+        wrapper.inSql(Article::getId, 
+            "SELECT document_id FROM user_foot WHERE user_id = " + userId + 
+            " AND document_type = 1 AND collection_stat = 1");
+        wrapper.eq(Article::getStatus, 1);
+        wrapper.orderByDesc(Article::getUpdateTime);
+        
+        Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
+        List<Article> list = pageResult.getRecords();
+        
+        for (Article article : list) {
+            List<Tag> tags = tagMapper.selectByArticleId(article.getId());
+            article.setTags(tags);
         }
         
-        PageVO<Article> pageVO = new PageVO<>(articles, (long) articles.size(), pageNum, pageSize);
+        PageVO<Article> pageVO = new PageVO<>(list, pageResult.getTotal(), pageNum, pageSize);
         return ResultVO.success(pageVO);
     }
     
@@ -494,7 +551,7 @@ public class ArticleServiceImpl implements ArticleService {
         
         if (existingBehavior != null) {
             existingBehavior.setBehaviorWeight(existingBehavior.getBehaviorWeight().add(weight));
-            userBehaviorMapper.update(existingBehavior);
+            userBehaviorMapper.updateById(existingBehavior);
         } else {
             UserBehavior behavior = new UserBehavior();
             behavior.setUserId(userId);

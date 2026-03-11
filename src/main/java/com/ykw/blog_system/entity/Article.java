@@ -66,6 +66,11 @@ public class Article {
     private Integer commentCount;
 
     /**
+     * 收藏数
+     */
+    private Integer collectionCount;
+
+    /**
      * 状态（0:草稿，1:发布，2:下架等）
      */
     private Integer status;
