@@ -46,10 +46,20 @@ public class ArticleServiceImpl implements ArticleService {
     private CommentMapper commentMapper;
     
     @Override
-    public ResultVO<PageVO<Article>> getArticleList(Integer pageNum, Integer pageSize, 
-                                                     Long categoryId, String keyword) {
-        PageHelper.startPage(pageNum, pageSize);
-        List<Article> list = articleMapper.selectList(1, categoryId, keyword);
+    public ResultVO<PageVO<Article>> queryArticles(ArticleQueryDTO queryDTO) {
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+        
+        List<Article> list;
+        
+        // 根据标签 ID 查询
+        if (queryDTO.getTagId() != null) {
+            list = articleMapper.selectByTagId(queryDTO.getTagId(), 1);
+        } 
+        // 根据分类和关键字查询
+        else {
+            list = articleMapper.selectList(1, queryDTO.getCategoryId(), queryDTO.getKeyword());
+        }
+        
         PageInfo<Article> pageInfo = new PageInfo<>(list);
         
         // 加载标签
@@ -58,23 +68,26 @@ public class ArticleServiceImpl implements ArticleService {
             article.setTags(tags);
         }
         
-        PageVO<Article> pageVO = new PageVO<>(list, pageInfo.getTotal(), pageNum, pageSize);
-        return ResultVO.success(pageVO);
-    }
-    
-    @Override
-    public ResultVO<PageVO<Article>> getArticlesByTag(Long tagId, Integer pageNum, Integer pageSize) {
-        PageHelper.startPage(pageNum, pageSize);
-        List<Article> list = articleMapper.selectByTagId(tagId, 1);
-        PageInfo<Article> pageInfo = new PageInfo<>(list);
-        
-        // 加载标签
-        for (Article article : list) {
-            List<Tag> tags = tagMapper.selectByArticleId(article.getId());
-            article.setTags(tags);
+        // 根据排序方式排序
+        if ("hot".equals(queryDTO.getOrderBy())) {
+            // 热门排序：按浏览量和点赞数
+            list.sort((a1, a2) -> {
+                int viewCompare = a2.getViewCount().compareTo(a1.getViewCount());
+                if (viewCompare != 0) return viewCompare;
+                return a2.getLikeCount().compareTo(a1.getLikeCount());
+            });
+        } else if ("recommend".equals(queryDTO.getOrderBy())) {
+            // 推荐排序：按推荐标志和发布时间
+            list.sort((a1, a2) -> {
+                int recommendCompare = a2.getIsRecommend().compareTo(a1.getIsRecommend());
+                if (recommendCompare != 0) return recommendCompare;
+                return a2.getPublishTime().compareTo(a1.getPublishTime());
+            });
         }
+        // 默认最新排序（按发布时间）
         
-        PageVO<Article> pageVO = new PageVO<>(list, pageInfo.getTotal(), pageNum, pageSize);
+        PageVO<Article> pageVO = new PageVO<>(list, pageInfo.getTotal(), 
+                                               queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
     }
     

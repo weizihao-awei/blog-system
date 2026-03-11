@@ -1,6 +1,7 @@
 package com.ykw.blog_system.controller;
 
 import com.ykw.blog_system.dto.ArticleDTO;
+import com.ykw.blog_system.dto.ArticleQueryDTO;
 import com.ykw.blog_system.entity.Article;
 import com.ykw.blog_system.service.ArticleService;
 import com.ykw.blog_system.utils.SecurityUtil;
@@ -24,26 +25,16 @@ public class ArticleController {
     private ArticleService articleService;
     
     /**
-     * 获取文章列表
+     * 通用文章查询接口（POST）
+     * 支持：分类、标签、关键字搜索、排序
      */
-    @GetMapping("/list")
-    public ResultVO<PageVO<Article>> getArticleList(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String keyword) {
-        return articleService.getArticleList(pageNum, pageSize, categoryId, keyword);
-    }
-    
-    /**
-     * 根据标签获取文章列表
-     */
-    @GetMapping("/tag/{tagId}")
-    public ResultVO<PageVO<Article>> getArticlesByTag(
-            @PathVariable Long tagId,
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        return articleService.getArticlesByTag(tagId, pageNum, pageSize);
+    @PostMapping("/query")
+    public ResultVO<PageVO<Article>> queryArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
+        // 如果 queryDTO 为 null，创建默认对象
+        if (queryDTO == null) {
+            queryDTO = new ArticleQueryDTO();
+        }
+        return articleService.queryArticles(queryDTO);
     }
     
     /**

@@ -13,10 +13,10 @@ import java.util.List;
  */
 public interface ArticleService {
     
-    ResultVO<PageVO<Article>> getArticleList(Integer pageNum, Integer pageSize, 
-                                              Long categoryId, String keyword);
-    
-    ResultVO<PageVO<Article>> getArticlesByTag(Long tagId, Integer pageNum, Integer pageSize);
+    /**
+     * 通用文章查询接口
+     */
+    ResultVO<PageVO<Article>> queryArticles(ArticleQueryDTO queryDTO);
     
     ResultVO<ArticleVO> getArticleDetail(Long articleId, Long currentUserId);
     
