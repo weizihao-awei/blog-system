@@ -1,4 +1,4 @@
-package com.ykw.blog_system.config;
+package com.ykw.blog_system.Config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
