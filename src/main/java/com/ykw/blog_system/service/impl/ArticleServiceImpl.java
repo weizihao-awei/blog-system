@@ -37,10 +37,7 @@ public class ArticleServiceImpl implements ArticleService {
     private ArticleTagMapper articleTagMapper;
     
     @Autowired
-    private ArticleLikeMapper articleLikeMapper;
-    
-    @Autowired
-    private ArticleCollectMapper articleCollectMapper;
+    private UserFootMapper userFootMapper;
     
     @Autowired
     private UserBehaviorMapper userBehaviorMapper;
@@ -103,8 +100,11 @@ public class ArticleServiceImpl implements ArticleService {
         Boolean isLiked = false;
         Boolean isCollected = false;
         if (currentUserId != null) {
-            isLiked = articleLikeMapper.selectByUserAndArticle(currentUserId, articleId) != null;
-            isCollected = articleCollectMapper.selectByUserAndArticle(currentUserId, articleId) != null;
+            UserFoot foot = userFootMapper.selectByUserAndDocument(currentUserId, articleId, 1);
+            if (foot != null) {
+                isLiked = foot.getPraiseStat() == 1;
+                isCollected = foot.getCollectionStat() == 1;
+            }
         }
         
         ArticleVO articleVO = new ArticleVO();
@@ -197,15 +197,28 @@ public class ArticleServiceImpl implements ArticleService {
             return ResultVO.error("文章不存在");
         }
         
-        ArticleLike existingLike = articleLikeMapper.selectByUserAndArticle(userId, articleId);
-        if (existingLike != null) {
+        UserFoot existingFoot = userFootMapper.selectByUserAndDocument(userId, articleId, 1);
+        if (existingFoot != null && existingFoot.getPraiseStat() == 1) {
             return ResultVO.error("已点赞过");
         }
         
-        ArticleLike articleLike = new ArticleLike();
-        articleLike.setUserId(userId);
-        articleLike.setArticleId(articleId);
-        articleLikeMapper.insert(articleLike);
+        if (existingFoot == null) {
+            // 创建新的足迹记录
+            UserFoot userFoot = new UserFoot();
+            userFoot.setUserId(userId);
+            userFoot.setDocumentId(articleId);
+            userFoot.setDocumentType(1); // 1-文章
+            userFoot.setDocumentUserId(article.getAuthorId());
+            userFoot.setPraiseStat(1); // 1-已点赞
+            userFoot.setReadStat(1); // 标记为已读
+            userFoot.setCollectionStat(0);
+            userFoot.setCommentStat(0);
+            userFootMapper.insert(userFoot);
+        } else {
+            // 更新点赞状态
+            existingFoot.setPraiseStat(1);
+            userFootMapper.update(existingFoot);
+        }
         
         articleMapper.increaseLikeCount(articleId, 1);
         
@@ -218,12 +231,15 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional
     public ResultVO<Void> unlikeArticle(Long articleId, Long userId) {
-        ArticleLike existingLike = articleLikeMapper.selectByUserAndArticle(userId, articleId);
-        if (existingLike == null) {
+        UserFoot existingFoot = userFootMapper.selectByUserAndDocument(userId, articleId, 1);
+        if (existingFoot == null || existingFoot.getPraiseStat() != 1) {
             return ResultVO.error("未点赞过");
         }
         
-        articleLikeMapper.deleteByUserAndArticle(userId, articleId);
+        // 更新点赞状态为取消
+        existingFoot.setPraiseStat(2); // 2-取消点赞
+        userFootMapper.update(existingFoot);
+        
         articleMapper.increaseLikeCount(articleId, -1);
         
         return ResultVO.success();
@@ -237,15 +253,28 @@ public class ArticleServiceImpl implements ArticleService {
             return ResultVO.error("文章不存在");
         }
         
-        ArticleCollect existingCollect = articleCollectMapper.selectByUserAndArticle(userId, articleId);
-        if (existingCollect != null) {
+        UserFoot existingFoot = userFootMapper.selectByUserAndDocument(userId, articleId, 1);
+        if (existingFoot != null && existingFoot.getCollectionStat() == 1) {
             return ResultVO.error("已收藏过");
         }
         
-        ArticleCollect articleCollect = new ArticleCollect();
-        articleCollect.setUserId(userId);
-        articleCollect.setArticleId(articleId);
-        articleCollectMapper.insert(articleCollect);
+        if (existingFoot == null) {
+            // 创建新的足迹记录
+            UserFoot userFoot = new UserFoot();
+            userFoot.setUserId(userId);
+            userFoot.setDocumentId(articleId);
+            userFoot.setDocumentType(1); // 1-文章
+            userFoot.setDocumentUserId(article.getAuthorId());
+            userFoot.setCollectionStat(1); // 1-已收藏
+            userFoot.setReadStat(1); // 标记为已读
+            userFoot.setPraiseStat(0);
+            userFoot.setCommentStat(0);
+            userFootMapper.insert(userFoot);
+        } else {
+            // 更新收藏状态
+            existingFoot.setCollectionStat(1);
+            userFootMapper.update(existingFoot);
+        }
         
         // 记录用户收藏行为
         recordUserBehavior(userId, articleId, "collect", new BigDecimal("5.0"));
@@ -256,12 +285,14 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional
     public ResultVO<Void> uncollectArticle(Long articleId, Long userId) {
-        ArticleCollect existingCollect = articleCollectMapper.selectByUserAndArticle(userId, articleId);
-        if (existingCollect == null) {
+        UserFoot existingFoot = userFootMapper.selectByUserAndDocument(userId, articleId, 1);
+        if (existingFoot == null || existingFoot.getCollectionStat() != 1) {
             return ResultVO.error("未收藏过");
         }
         
-        articleCollectMapper.deleteByUserAndArticle(userId, articleId);
+        // 更新收藏状态为取消
+        existingFoot.setCollectionStat(2); // 2-取消收藏
+        userFootMapper.update(existingFoot);
         
         return ResultVO.success();
     }
@@ -408,11 +439,11 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ResultVO<PageVO<Article>> getMyCollects(Long userId, Integer pageNum, Integer pageSize) {
         PageHelper.startPage(pageNum, pageSize);
-        List<ArticleCollect> collects = articleCollectMapper.selectByUserId(userId);
+        List<UserFoot> foots = userFootMapper.selectByUserIdAndType(userId, 1); // 1-文章
         
         List<Article> articles = new ArrayList<>();
-        for (ArticleCollect collect : collects) {
-            Article article = articleMapper.selectByIdWithTags(collect.getArticleId());
+        for (UserFoot foot : foots) {
+            Article article = articleMapper.selectByIdWithTags(foot.getDocumentId());
             if (article != null && article.getStatus() == 1) {
                 List<Tag> tags = tagMapper.selectByArticleId(article.getId());
                 article.setTags(tags);

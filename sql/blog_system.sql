@@ -115,29 +115,23 @@ CREATE TABLE IF NOT EXISTS `user_behavior` (
     KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户行为记录表';
 
--- 文章收藏表
-CREATE TABLE IF NOT EXISTS `article_collect` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'ID',
-    `user_id` BIGINT NOT NULL COMMENT '用户ID',
-    `article_id` BIGINT NOT NULL COMMENT '文章ID',
-    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_user_article` (`user_id`, `article_id`),
-    KEY `idx_user` (`user_id`),
-    KEY `idx_article` (`article_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文章收藏表';
-
--- 文章点赞表
-CREATE TABLE IF NOT EXISTS `article_like` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'ID',
-    `user_id` BIGINT NOT NULL COMMENT '用户ID',
-    `article_id` BIGINT NOT NULL COMMENT '文章ID',
-    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_user_article` (`user_id`, `article_id`),
-    KEY `idx_user` (`user_id`),
-    KEY `idx_article` (`article_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文章点赞表';
+-- 用户足迹表（统一管理点赞、收藏）
+CREATE TABLE IF NOT EXISTS `user_foot` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
+  `user_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '用户 ID',
+  `document_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '文档 ID（文章/评论）',
+  `document_type` tinyint(4) NOT NULL DEFAULT '1' COMMENT '文档类型：1-文章，2-评论',
+  `document_user_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '发布该文档的用户 ID',
+  `collection_stat` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '收藏状态：0-未收藏，1-已收藏，2-取消收藏',
+  `read_stat` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '阅读状态：0-未读，1-已读',
+  `comment_stat` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '评论状态：0-未评论，1-已评论，2-删除评论',
+  `praise_stat` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '点赞状态：0-未点赞，1-已点赞，2-取消点赞',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_user_document` (`user_id`,`document_id`,`document_type`),
+  KEY `idx_document_id` (`document_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='用户足迹表';
 
 -- 系统配置表
 CREATE TABLE IF NOT EXISTS `system_config` (

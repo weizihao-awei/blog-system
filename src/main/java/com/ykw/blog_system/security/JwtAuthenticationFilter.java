@@ -22,6 +22,8 @@ import java.util.Collections;
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    //添加日志对象
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     
     @Autowired
     private JwtUtil jwtUtil;
@@ -37,6 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
             Long userId = jwtUtil.getUserIdFromToken(token);
             User user = userMapper.selectById(userId);
+            logger.info("通过token获取的用户ID: {}", userId);
             
             if (user != null && user.getStatus() == 1) {
                 UsernamePasswordAuthenticationToken authentication = 

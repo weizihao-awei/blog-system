@@ -1,4 +1,4 @@
-package com.ykw.blog_system.config;
+package com.ykw.blog_system.Config;
 
 import com.ykw.blog_system.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
