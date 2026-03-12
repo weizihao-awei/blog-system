@@ -1,6 +1,7 @@
 package com.ykw.blog_system.controller;
 
 import com.ykw.blog_system.dto.ArticleDTO;
+import com.ykw.blog_system.dto.ArticleOperationDTO;
 import com.ykw.blog_system.dto.ArticleQueryDTO;
 import com.ykw.blog_system.entity.Article;
 import com.ykw.blog_system.service.ArticleService;
@@ -84,42 +85,6 @@ public class ArticleController {
         return articleService.deleteArticle(articleId, currentUserId);
     }
     
-    /**
-     * 点赞文章
-     */
-    @PostMapping("/like/{articleId}")
-    public ResultVO<Void> likeArticle(@PathVariable Long articleId) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        return articleService.likeArticle(articleId, userId);
-    }
-    
-    /**
-     * 取消点赞
-     */
-    @DeleteMapping("/like/{articleId}")
-    public ResultVO<Void> unlikeArticle(@PathVariable Long articleId) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        return articleService.unlikeArticle(articleId, userId);
-    }
-    
-    /**
-     * 收藏文章
-     */
-    @PostMapping("/collect/{articleId}")
-    public ResultVO<Void> collectArticle(@PathVariable Long articleId) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        return articleService.collectArticle(articleId, userId);
-    }
-    
-    /**
-     * 取消收藏
-     */
-    @DeleteMapping("/collect/{articleId}")
-    public ResultVO<Void> uncollectArticle(@PathVariable Long articleId) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        return articleService.uncollectArticle(articleId, userId);
-    }
-
     /**
      * 统一操作接口（点赞、取消点赞、收藏、取消收藏）
      */

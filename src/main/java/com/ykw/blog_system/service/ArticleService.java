@@ -27,10 +27,6 @@ public interface ArticleService {
     ResultVO<Void> updateArticle(ArticleDTO articleDTO, Long currentUserId);
     
     ResultVO<Void> deleteArticle(Long articleId, Long currentUserId);
-    
-    ResultVO<Void> likeArticle(Long articleId, Long userId);
-
-    ResultVO<Void> unlikeArticle(Long articleId, Long userId);
 
     ResultVO<Void> operateArticle(ArticleOperationDTO operationDTO, Long userId);
 
