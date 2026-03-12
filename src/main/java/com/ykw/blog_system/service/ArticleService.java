@@ -30,7 +30,10 @@ public interface ArticleService {
     ResultVO<Void> likeArticle(Long articleId, Long userId);
     
     ResultVO<Void> unlikeArticle(Long articleId, Long userId);
-    
+
+    /**
+     * 收藏文章
+     */
     ResultVO<Void> collectArticle(Long articleId, Long userId);
     
     ResultVO<Void> uncollectArticle(Long articleId, Long userId);

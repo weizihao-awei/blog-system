@@ -130,7 +130,7 @@ public class ArticleServiceImpl implements ArticleService {
         //加载用户信息,用户id从token中获取
         Long userId = SecurityUtil.getCurrentUserId();
         //
-        UserFoot userFoot = userFootMapper.selectByUserAndDocument(userId, article.getAuthorId(), 1);
+        UserFoot userFoot = userFootMapper.selectByUserAndDocument(userId, articleId, 1);
         if (userFoot != null) {
             articleVO.setIsCollected(userFoot.getCollectionStat() == 1);
             articleVO.setIsLiked(userFoot.getPraiseStat() == 1);
@@ -294,16 +294,26 @@ public class ArticleServiceImpl implements ArticleService {
         
         return ResultVO.success();
     }
+    /**
+     * 收藏文章
+     */
     
     @Override
     @Transactional
     public ResultVO<Void> collectArticle(Long articleId, Long userId) {
         Article article = articleMapper.selectById(articleId);
         if (article == null) {
-            return ResultVO.error("文章不存在");
+            return ResultVO.error("文章不存在，无法进行收藏");
         }
-        
-        UserFoot existingFoot = userFootMapper.selectByUserAndDocument(userId, articleId, 1);
+
+        // 使用 LambdaQueryWrapper 查询
+        LambdaQueryWrapper<UserFoot> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserFoot::getUserId, userId)
+                .eq(UserFoot::getDocumentId, articleId)
+                .eq(UserFoot::getDocumentType, 1);
+
+        UserFoot existingFoot = userFootMapper.selectOne(wrapper);
+
         if (existingFoot != null && existingFoot.getCollectionStat() == 1) {
             return ResultVO.error("已收藏过");
         }
@@ -323,32 +333,33 @@ public class ArticleServiceImpl implements ArticleService {
             existingFoot.setCollectionStat(1);
             userFootMapper.updateById(existingFoot);
         }
-        
-        articleMapper.update(null, 
-            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
-                .setSql("collection_count = collection_count + 1")
-                .eq(Article::getId, articleId));
+
+        articleMapper.updateCollectionCount(articleId, 1);
         
         recordUserBehavior(userId, articleId, "collect", new BigDecimal("5.0"));
         
         return ResultVO.success();
     }
-    
+
+    /**
+     * 取消收藏文章
+     * @param articleId 文章 ID
+     * @param userId 用户 ID
+     * @return ResultVO
+     */
     @Override
     @Transactional
     public ResultVO<Void> uncollectArticle(Long articleId, Long userId) {
         UserFoot existingFoot = userFootMapper.selectByUserAndDocument(userId, articleId, 1);
         if (existingFoot == null || existingFoot.getCollectionStat() != 1) {
+
             return ResultVO.error("未收藏过");
         }
         
         existingFoot.setCollectionStat(2);
         userFootMapper.updateById(existingFoot);
         
-        articleMapper.update(null, 
-            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
-                .setSql("collection_count = collection_count - 1")
-                .eq(Article::getId, articleId));
+        articleMapper.updateCollectionCount(articleId, -1);
         
         return ResultVO.success();
     }

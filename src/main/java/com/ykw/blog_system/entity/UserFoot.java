@@ -1,5 +1,6 @@
 package com.ykw.blog_system.entity;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
  */
 @Data
 public class UserFoot {
-    
+    @TableId
     private Long id;
     
     private Long userId;
@@ -20,7 +21,7 @@ public class UserFoot {
     
     private Long documentUserId; // 发布该文档的用户 ID
     
-    private Integer collectionStat; // 0-未收藏，1-已收藏，2-取消收藏
+    private Integer     collectionStat; // 0-未收藏，1-已收藏，2-取消收藏
     
     private Integer readStat; // 0-未读，1-已读
     

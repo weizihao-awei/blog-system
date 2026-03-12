@@ -6,11 +6,19 @@ import com.ykw.blog_system.entity.Article;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
 @Mapper
 public interface ArticleMapper extends BaseMapper<Article> {
+
+
+    /**
+     * 增加文章收藏数
+     */
+    @Update("UPDATE article SET collection_count = collection_count + #{increment} WHERE id = #{articleId}")
+    int updateCollectionCount(@Param("articleId") Long articleId, @Param("increment") Integer increment);
 
 
 
