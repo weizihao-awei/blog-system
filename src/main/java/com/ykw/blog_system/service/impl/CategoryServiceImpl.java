@@ -1,7 +1,6 @@
 package com.ykw.blog_system.service.impl;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.dto.CategoryDTO;
 import com.ykw.blog_system.entity.Category;
 import com.ykw.blog_system.mapper.CategoryMapper;
@@ -82,11 +81,20 @@ public class CategoryServiceImpl implements CategoryService {
     
     @Override
     public ResultVO<PageVO<Category>> getAdminCategoryList(Integer pageNum, Integer pageSize) {
-        PageHelper.startPage(pageNum, pageSize);
-        List<Category> list = categoryMapper.selectList(null);
-        PageInfo<Category> pageInfo = new PageInfo<>(list);
+        // 创建 Page 对象
+        Page<Category> page = new Page<>(pageNum, pageSize);
         
-        PageVO<Category> pageVO = new PageVO<>(list, pageInfo.getTotal(), pageNum, pageSize);
+        // 执行分页查询
+        List<Category> list = categoryMapper.selectPage(page);
+        
+        // 构建分页结果
+        PageVO<Category> pageVO = new PageVO<>(
+            list, 
+            page.getTotal(), 
+            pageNum, 
+            pageSize
+        );
+        
         return ResultVO.success(pageVO);
     }
 }

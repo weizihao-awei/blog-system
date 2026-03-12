@@ -57,4 +57,9 @@
     <select id="countCategories" resultType="java.lang.Long">
         SELECT COUNT(*) FROM category WHERE status = 1
     </select>
+    
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM category
+        ORDER BY sort_order ASC, create_time DESC
+    </select>
 </mapper>

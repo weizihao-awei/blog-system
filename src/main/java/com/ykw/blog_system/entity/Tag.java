@@ -20,6 +20,5 @@ public class Tag {
     
     private LocalDateTime createTime;
     
-    // 非数据库字段，用于统计标签文章数量
-    private Integer articleCount;
+
 }

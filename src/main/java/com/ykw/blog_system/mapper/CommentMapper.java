@@ -1,5 +1,6 @@
 package com.ykw.blog_system.mapper;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.entity.Comment;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -30,4 +31,6 @@ public interface CommentMapper {
     Long countComments(@Param("status") Integer status);
     
     Long countByArticleId(Long articleId);
+    
+    List<Comment> selectPage(Page<Comment> page, @Param("status") Integer status);
 }

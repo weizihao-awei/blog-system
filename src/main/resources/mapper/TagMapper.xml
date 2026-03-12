@@ -72,4 +72,9 @@
     <select id="countTags" resultType="java.lang.Long">
         SELECT COUNT(*) FROM tag WHERE status = 1
     </select>
+    
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM tag
+        ORDER BY create_time DESC
+    </select>
 </mapper>

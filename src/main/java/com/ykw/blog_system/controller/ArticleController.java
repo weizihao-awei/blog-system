@@ -28,7 +28,7 @@ public class ArticleController {
      * 获取最新文章
      */
     @PostMapping("/latest")
-    public ResultVO<PageVO<Article>> getLatestArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
+    public ResultVO<PageVO<ArticleVO>> getLatestArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
         if (queryDTO == null) {
             queryDTO = new ArticleQueryDTO();
         }
@@ -40,7 +40,7 @@ public class ArticleController {
      * 支持：分类、标签、关键字搜索、排序
      */
     @PostMapping("/query")
-    public ResultVO<PageVO<Article>> queryArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
+    public ResultVO<PageVO<ArticleVO>> queryArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
         // 如果 queryDTO 为 null，创建默认对象
         if (queryDTO == null) {
             queryDTO = new ArticleQueryDTO();
@@ -124,7 +124,7 @@ public class ArticleController {
      * 获取热门文章
      */
     @PostMapping("/hot")
-    public ResultVO<PageVO<Article>> getHotArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
+    public ResultVO<PageVO<ArticleVO>> getHotArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
         if (queryDTO == null) {
             queryDTO = new ArticleQueryDTO();
         }
@@ -137,7 +137,7 @@ public class ArticleController {
      * 获取推荐文章
      */
     @PostMapping("/recommend")
-    public ResultVO<PageVO<Article>> getRecommendArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
+    public ResultVO<PageVO<ArticleVO>> getRecommendArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
         if (queryDTO == null) {
             queryDTO = new ArticleQueryDTO();
         }
@@ -149,7 +149,7 @@ public class ArticleController {
      * 获取我的文章列表
      */
     @GetMapping("/my")
-    public ResultVO<PageVO<Article>> getMyArticles(
+    public ResultVO<PageVO<ArticleVO>> getMyArticles(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) Integer status) {
@@ -161,7 +161,8 @@ public class ArticleController {
      * 获取我的收藏列表
      */
     @GetMapping("/my-collects")
-    public ResultVO<PageVO<Article>> getMyCollects(
+    public ResultVO<PageVO<ArticleVO>> getMyCollects(
+
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
         Long userId = SecurityUtil.getCurrentUserId();

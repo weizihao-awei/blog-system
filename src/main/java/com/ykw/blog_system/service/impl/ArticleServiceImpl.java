@@ -48,7 +48,7 @@ public class ArticleServiceImpl implements ArticleService {
     private CommentMapper commentMapper;
     
     @Override
-    public ResultVO<PageVO<Article>> queryArticles(ArticleQueryDTO queryDTO) {
+    public ResultVO<PageVO<ArticleVO>> queryArticles(ArticleQueryDTO queryDTO) {
         Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         
         LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
@@ -74,12 +74,25 @@ public class ArticleServiceImpl implements ArticleService {
         Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
         List<Article> list = pageResult.getRecords();
         
+        // 转换为 ArticleVO 并加载标签
+        List<ArticleVO> voList = new ArrayList<>();
         for (Article article : list) {
+            ArticleVO articleVO = new ArticleVO();
+            BeanUtils.copyProperties(article, articleVO);
+            
+            // 加载标签
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
-            article.setTags(tags);
+            List<TagVO> tagVOList = tags.stream().map(tag -> {
+                TagVO tagVO = new TagVO();
+                BeanUtils.copyProperties(tag, tagVO);
+                return tagVO;
+            }).collect(Collectors.toList());
+            articleVO.setTags(tagVOList);
+            
+            voList.add(articleVO);
         }
         
-        PageVO<Article> pageVO = new PageVO<>(list, pageResult.getTotal(), 
+        PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(), 
                                                queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
     }
@@ -323,40 +336,52 @@ public class ArticleServiceImpl implements ArticleService {
     }
     
     @Override
-    public ResultVO<PageVO<Article>> getHotArticles(ArticleQueryDTO queryDTO) {
+    public ResultVO<PageVO<ArticleVO>> getHotArticles(ArticleQueryDTO queryDTO) {
         Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
-        
+            
         LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Article::getStatus, 1)
                 .orderByDesc(Article::getViewCount, Article::getLikeCount);
-        
+            
         // 分类 ID 过滤
         if (queryDTO.getCategoryId() != null) {
             wrapper.eq(Article::getCategoryId, queryDTO.getCategoryId());
         }
-        
+            
         // 关键字过滤
         if (queryDTO.getKeyword() != null && !queryDTO.getKeyword().isEmpty()) {
             wrapper.and(w -> w.like(Article::getTitle, queryDTO.getKeyword())
                     .or().like(Article::getSummary, queryDTO.getKeyword()));
         }
-        
+            
         Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
         List<Article> list = pageResult.getRecords();
-        
-        // 加载标签
+            
+        // 转换为 ArticleVO 并加载标签
+        List<ArticleVO> voList = new ArrayList<>();
         for (Article article : list) {
+            ArticleVO articleVO = new ArticleVO();
+            BeanUtils.copyProperties(article, articleVO);
+                
+            // 加载标签
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
-            article.setTags(tags);
+            List<TagVO> tagVOList = tags.stream().map(tag -> {
+                TagVO tagVO = new TagVO();
+                BeanUtils.copyProperties(tag, tagVO);
+                return tagVO;
+            }).collect(Collectors.toList());
+            articleVO.setTags(tagVOList);
+                
+            voList.add(articleVO);
         }
-        
-        PageVO<Article> pageVO = new PageVO<>(list, pageResult.getTotal(), 
+            
+        PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(), 
                                                queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
     }
     
     @Override
-    public ResultVO<PageVO<Article>> getLatestArticles(ArticleQueryDTO queryDTO) {
+    public ResultVO<PageVO<ArticleVO>> getLatestArticles(ArticleQueryDTO queryDTO) {
         Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         
         LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
@@ -377,19 +402,16 @@ public class ArticleServiceImpl implements ArticleService {
         Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
         List<Article> list = pageResult.getRecords();
         
-        // 加载标签
-        for (Article article : list) {
-            List<Tag> tags = tagMapper.selectByArticleId(article.getId());
-            article.setTags(tags);
-        }
+        // 转换为 ArticleVO 并加载标签
+        List<ArticleVO> voList = convertToVOList(list);
         
-        PageVO<Article> pageVO = new PageVO<>(list, pageResult.getTotal(), 
+        PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(), 
                                                queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
     }
     
     @Override
-    public ResultVO<PageVO<Article>> getRecommendArticles(Long userId, ArticleQueryDTO queryDTO) {
+    public ResultVO<PageVO<ArticleVO>> getRecommendArticles(Long userId, ArticleQueryDTO queryDTO) {
         List<Article> recommendArticles = new ArrayList<>();
         
         if (userId != null) {
@@ -418,12 +440,10 @@ public class ArticleServiceImpl implements ArticleService {
             pagedArticles = recommendArticles.subList(startIndex, endIndex);
         }
         
-        for (Article article : pagedArticles) {
-            List<Tag> tags = tagMapper.selectByArticleId(article.getId());
-            article.setTags(tags);
-        }
+        // 转换为 ArticleVO 并加载标签
+        List<ArticleVO> voList = convertToVOList(pagedArticles);
         
-        PageVO<Article> pageVO = new PageVO<>(pagedArticles, (long) total, 
+        PageVO<ArticleVO> pageVO = new PageVO<>(voList, (long) total, 
                                                queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
     }
@@ -448,23 +468,19 @@ public class ArticleServiceImpl implements ArticleService {
         // 获取所有文章（排除已删除的），用于计算推荐得分
         List<Article> allArticles = articleMapper.selectList(new LambdaQueryWrapper<Article>()
                 .eq(Article::getStatus, 1));
-        List<Article> scoredArticles = new ArrayList<>();
         
-        for (Article article : allArticles) {
-            if (viewedArticleIds.contains(article.getId())) {
-                continue; // 跳过已浏览的文章
-            }
-            
-            List<Tag> articleTags = tagMapper.selectByArticleId(article.getId());
-            double score = calculateRecommendationScore(article, articleTags, interestedTagIds, behaviors);
-            article.setRecommendScore(score);
-            scoredArticles.add(article);
-        }
-        
-        // 按推荐得分排序
-        scoredArticles.sort((a1, a2) -> Double.compare(a2.getRecommendScore(), a1.getRecommendScore()));
-        
-        return scoredArticles.stream().limit(limit).collect(Collectors.toList());
+        // 计算每篇文章的推荐得分并排序
+        return allArticles.stream()
+                .filter(article -> !viewedArticleIds.contains(article.getId()))
+                .sorted((a1, a2) -> {
+                    double score1 = calculateRecommendationScore(a1, 
+                        tagMapper.selectByArticleId(a1.getId()), interestedTagIds, behaviors);
+                    double score2 = calculateRecommendationScore(a2, 
+                        tagMapper.selectByArticleId(a2.getId()), interestedTagIds, behaviors);
+                    return Double.compare(score2, score1);
+                })
+                .limit(limit != null ? limit : allArticles.size())
+                .collect(Collectors.toList());
     }
     
     /**
@@ -497,7 +513,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
     
     @Override
-    public ResultVO<PageVO<Article>> getMyArticles(Long userId, Integer pageNum, Integer pageSize, Integer status) {
+    public ResultVO<PageVO<ArticleVO>> getMyArticles(Long userId, Integer pageNum, Integer pageSize, Integer status) {
         Page<Article> page = new Page<>(pageNum, pageSize);
         
         LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
@@ -510,17 +526,15 @@ public class ArticleServiceImpl implements ArticleService {
         Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
         List<Article> list = pageResult.getRecords();
         
-        for (Article article : list) {
-            List<Tag> tags = tagMapper.selectByArticleId(article.getId());
-            article.setTags(tags);
-        }
+        // 转换为 ArticleVO 并加载标签
+        List<ArticleVO> voList = convertToVOList(list);
         
-        PageVO<Article> pageVO = new PageVO<>(list, pageResult.getTotal(), pageNum, pageSize);
+        PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(), pageNum, pageSize);
         return ResultVO.success(pageVO);
     }
     
     @Override
-    public ResultVO<PageVO<Article>> getMyCollects(Long userId, Integer pageNum, Integer pageSize) {
+    public ResultVO<PageVO<ArticleVO>> getMyCollects(Long userId, Integer pageNum, Integer pageSize) {
         Page<Article> page = new Page<>(pageNum, pageSize);
         
         LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
@@ -533,15 +547,37 @@ public class ArticleServiceImpl implements ArticleService {
         Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
         List<Article> list = pageResult.getRecords();
         
-        for (Article article : list) {
-            List<Tag> tags = tagMapper.selectByArticleId(article.getId());
-            article.setTags(tags);
-        }
+        // 转换为 ArticleVO 并加载标签
+        List<ArticleVO> voList = convertToVOList(list);
         
-        PageVO<Article> pageVO = new PageVO<>(list, pageResult.getTotal(), pageNum, pageSize);
+        PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(), pageNum, pageSize);
         return ResultVO.success(pageVO);
     }
     
+    /**
+    /**
+     * 将 Article 列表转换为 ArticleVO 列表，并加载标签和用户信息
+     */
+    private List<ArticleVO> convertToVOList(List<Article> articles) {
+        List<ArticleVO> voList = new ArrayList<>();
+        for (Article article : articles) {
+            ArticleVO articleVO = new ArticleVO();
+            BeanUtils.copyProperties(article, articleVO);
+            
+            // 加载标签
+            List<Tag> tags = tagMapper.selectByArticleId(article.getId());
+            List<TagVO> tagVOList = tags.stream().map(tag -> {
+                TagVO tagVO = new TagVO();
+                BeanUtils.copyProperties(tag, tagVO);
+                return tagVO;
+            }).collect(Collectors.toList());
+            articleVO.setTags(tagVOList);
+
+            
+            voList.add(articleVO);
+        }
+        return voList;
+    }
     /**
      * 记录用户行为
      */

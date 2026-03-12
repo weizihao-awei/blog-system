@@ -86,4 +86,16 @@
     <select id="countByArticleId" resultType="java.lang.Long">
         SELECT COUNT(*) FROM comment WHERE article_id = #{articleId} AND status = 1
     </select>
+    
+    <select id="selectPage" resultMap="CommentWithUserResultMap">
+        SELECT 
+            <include refid="Base_Column_List"/>
+        FROM comment c
+        <where>
+            <if test="status != null">
+                AND c.status = #{status}
+            </if>
+        </where>
+        ORDER BY c.create_time DESC
+    </select>
 </mapper>

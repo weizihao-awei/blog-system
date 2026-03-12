@@ -1,5 +1,6 @@
 package com.ykw.blog_system.mapper;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.entity.Category;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -25,4 +26,6 @@ public interface CategoryMapper {
     List<Category> selectList(@Param("status") Integer status);
     
     Long countCategories();
+    
+    List<Category> selectPage(Page<Category> page);
 }

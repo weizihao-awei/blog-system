@@ -1,5 +1,6 @@
 package com.ykw.blog_system.mapper;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.entity.Tag;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -29,4 +30,6 @@ public interface TagMapper {
     List<Tag> selectHotTags(@Param("limit") Integer limit);
     
     Long countTags();
+    
+    List<Tag> selectPage(Page<Tag> page);
 }

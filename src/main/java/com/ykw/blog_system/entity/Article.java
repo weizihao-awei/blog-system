@@ -99,41 +99,4 @@ public class Article {
      * 更新时间
      */
     private LocalDateTime updateTime;
-
-    // 非数据库字段
-
-    /**
-     * 作者姓名
-     */
-    private String authorName;
-
-    /**
-     * 作者头像
-     */
-    private String authorAvatar;
-
-    /**
-     * 分类名称
-     */
-    private String categoryName;
-
-    /**
-     * 标签列表
-     */
-    private List<Tag> tags;
-
-    /**
-     * 当前用户是否已点赞
-     */
-    private Boolean isLiked;
-
-    /**
-     * 当前用户是否已收藏
-     */
-    private Boolean isCollected;
-
-    /**
-     * 推荐得分（用于推荐算法）
-     */
-    private Double recommendScore;
 }

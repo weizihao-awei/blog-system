@@ -49,28 +49,6 @@
         WHERE a.id = #{id}
     </select>
     
-    <select id="selectList" resultMap="ArticleWithAuthorResultMap">
-        SELECT 
-            <include refid="Base_Column_List"/>,
-            u.nickname as author_name, u.avatar as author_avatar,
-            c.name as category_name
-        FROM article a
-        LEFT JOIN user u ON a.author_id = u.id
-        LEFT JOIN category c ON a.category_id = c.id
-        <where>
-            <if test="status != null">
-                AND a.status = #{status}
-            </if>
-            <if test="categoryId != null">
-                AND a.category_id = #{categoryId}
-            </if>
-            <if test="keyword != null and keyword != ''">
-                AND (a.title LIKE CONCAT('%', #{keyword}, '%') OR a.summary LIKE CONCAT('%', #{keyword}, '%'))
-            </if>
-        </where>
-        ORDER BY a.is_top DESC, a.publish_time DESC
-    </select>
-    
     <select id="selectByTagId" resultMap="ArticleWithAuthorResultMap">
         SELECT 
             <include refid="Base_Column_List"/>,

@@ -184,7 +184,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 更新密码
         user.setPassword(passwordEncoder.encode(resetPasswordDTO.getNewPassword()));
-        userMapper.update(user);
+        userMapper.updateById(user);
 
         // 清除验证码
         verificationCodeCache.removeCode(resetPasswordDTO.getEmail());

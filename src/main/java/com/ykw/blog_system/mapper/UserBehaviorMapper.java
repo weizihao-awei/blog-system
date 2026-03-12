@@ -1,5 +1,6 @@
 package com.ykw.blog_system.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.ykw.blog_system.entity.UserBehavior;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -10,7 +11,7 @@ import java.util.List;
  * 用户行为记录Mapper接口
  */
 @Mapper
-public interface UserBehaviorMapper {
+public interface UserBehaviorMapper extends BaseMapper<UserBehavior> {
     
     int insert(UserBehavior userBehavior);
     

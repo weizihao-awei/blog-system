@@ -1,7 +1,6 @@
 package com.ykw.blog_system.service.impl;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.dto.CommentDTO;
 import com.ykw.blog_system.entity.Comment;
 import com.ykw.blog_system.entity.User;
@@ -102,9 +101,7 @@ public class CommentServiceImpl implements CommentService {
         
         commentMapper.insert(comment);
         
-        // 增加文章评论数
-        articleMapper.increaseCommentCount(commentDTO.getArticleId(), 1);
-        
+
         return ResultVO.success("评论成功", comment.getId());
     }
     
@@ -124,9 +121,7 @@ public class CommentServiceImpl implements CommentService {
         // 递归删除子评论
         deleteCommentAndChildren(commentId);
         
-        // 减少文章评论数
-        articleMapper.increaseCommentCount(comment.getArticleId(), -1);
-        
+
         return ResultVO.success();
     }
     
@@ -152,14 +147,23 @@ public class CommentServiceImpl implements CommentService {
     
     @Override
     public ResultVO<PageVO<CommentVO>> getAdminCommentList(Integer pageNum, Integer pageSize, Integer status) {
-        PageHelper.startPage(pageNum, pageSize);
-        // 这里简化处理，实际应该查询所有评论
-        List<Comment> list = new ArrayList<>();
-        PageInfo<Comment> pageInfo = new PageInfo<>(list);
+        // 创建 Page 对象
+        Page<Comment> page = new Page<>(pageNum, pageSize);
         
+        // 执行分页查询
+        List<Comment> list = commentMapper.selectPage(page, status);
+        
+        // 转换为 VO 列表
         List<CommentVO> voList = list.stream().map(this::convertToVO).collect(Collectors.toList());
         
-        PageVO<CommentVO> pageVO = new PageVO<>(voList, pageInfo.getTotal(), pageNum, pageSize);
+        // 构建分页结果
+        PageVO<CommentVO> pageVO = new PageVO<>(
+            voList, 
+            page.getTotal(), 
+            pageNum, 
+            pageSize
+        );
+        
         return ResultVO.success(pageVO);
     }
 }
