@@ -1,6 +1,7 @@
 package com.ykw.blog_system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.dto.ArticleDTO;
 import com.ykw.blog_system.dto.ArticleQueryDTO;
@@ -46,6 +47,9 @@ public class ArticleServiceImpl implements ArticleService {
     
     @Autowired
     private CommentMapper commentMapper;
+
+    @Autowired
+    private UserMapper userMapper;
     
     @Override
     public ResultVO<PageVO<ArticleVO>> queryArticles(ArticleQueryDTO queryDTO) {
@@ -96,47 +100,61 @@ public class ArticleServiceImpl implements ArticleService {
                                                queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
     }
+    /**
+     * 获取文章详情
+     */
     
     @Override
     public ResultVO<ArticleVO> getArticleDetail(Long articleId, Long currentUserId) {
-        Article article = articleMapper.selectByIdWithTags(articleId);
+        Article article = articleMapper.selectById(articleId);
         if (article == null) {
             return ResultVO.error("文章不存在");
         }
-        
-        articleMapper.update(null, 
-            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
-                .setSql("view_count = view_count + 1")
-                .eq(Article::getId, articleId));
-        
-        if (currentUserId != null) {
-            recordUserBehavior(currentUserId, articleId, "view", new BigDecimal("1.0"));
-        }
-        
-        List<Tag> tags = tagMapper.selectByArticleId(articleId);
-        
-        Boolean isLiked = false;
-        Boolean isCollected = false;
-        if (currentUserId != null) {
-            UserFoot foot = userFootMapper.selectByUserAndDocument(currentUserId, articleId, 1);
-            if (foot != null) {
-                isLiked = foot.getPraiseStat() == 1;
-                isCollected = foot.getCollectionStat() == 1;
-            }
-        }
-        
         ArticleVO articleVO = new ArticleVO();
         BeanUtils.copyProperties(article, articleVO);
-        
+
+        List<Tag> tags = tagMapper.selectByArticleId(articleId);
         List<TagVO> tagVOList = tags.stream().map(tag -> {
             TagVO tagVO = new TagVO();
             BeanUtils.copyProperties(tag, tagVO);
             return tagVO;
         }).collect(Collectors.toList());
         articleVO.setTags(tagVOList);
+
+
+        // 加载作者信息
+        User author = userMapper.selectById(article.getAuthorId());
+        articleVO.setAuthorName(author.getNickname());
+        articleVO.setAuthorAvatar(author.getAvatar());
+
+        //加载用户信息,用户id从token中获取
+        Long userId = SecurityUtil.getCurrentUserId();
+        //
+        UserFoot userFoot = userFootMapper.selectByUserAndDocument(userId, article.getAuthorId(), 1);
+        if (userFoot != null) {
+            articleVO.setIsCollected(userFoot.getCollectionStat() == 1);
+            articleVO.setIsLiked(userFoot.getPraiseStat() == 1);
+        }
+
+
+        // 2. 构建 Lambda 更新条件，使用 setSql 方法实现自增
+        LambdaUpdateWrapper<Article> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper
+                // 核心：使用 setSql 实现 view_count = view_count + 1
+                .setSql("view_count = view_count + 1")
+                // 精准匹配文章 ID
+                .eq(Article::getId, articleId);
+
+        // 3. 执行更新并校验结果
+        int affectedRows = articleMapper.update(null, updateWrapper);
         
-        articleVO.setIsLiked(isLiked);
-        articleVO.setIsCollected(isCollected);
+        if (currentUserId != null) {
+            recordUserBehavior(currentUserId, articleId, "view", new BigDecimal("1.0"));
+        }
+        
+
+        
+
         
         return ResultVO.success(articleVO);
     }
@@ -553,17 +571,18 @@ public class ArticleServiceImpl implements ArticleService {
         PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(), pageNum, pageSize);
         return ResultVO.success(pageVO);
     }
-    
-    /**
+
+
     /**
      * 将 Article 列表转换为 ArticleVO 列表，并加载标签和用户信息
      */
+    //todo： 后面要改成连表查询或者缓存不然差一条记录就要调用单次sql连接
     private List<ArticleVO> convertToVOList(List<Article> articles) {
         List<ArticleVO> voList = new ArrayList<>();
         for (Article article : articles) {
             ArticleVO articleVO = new ArticleVO();
             BeanUtils.copyProperties(article, articleVO);
-            
+
             // 加载标签
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
             List<TagVO> tagVOList = tags.stream().map(tag -> {
@@ -573,7 +592,20 @@ public class ArticleServiceImpl implements ArticleService {
             }).collect(Collectors.toList());
             articleVO.setTags(tagVOList);
 
-            
+            // 加载作者信息
+            User author = userMapper.selectById(article.getAuthorId());
+            articleVO.setAuthorName(author.getNickname());
+            articleVO.setAuthorAvatar(author.getAvatar());
+
+            //加载用户信息,用户id从token中获取
+            Long userId = SecurityUtil.getCurrentUserId();
+            //
+            UserFoot userFoot = userFootMapper.selectByUserAndDocument(userId, article.getAuthorId(), 1);
+            if (userFoot != null) {
+                articleVO.setIsCollected(userFoot.getCollectionStat() == 1);
+                articleVO.setIsLiked(userFoot.getPraiseStat() == 1);
+            }
+
             voList.add(articleVO);
         }
         return voList;

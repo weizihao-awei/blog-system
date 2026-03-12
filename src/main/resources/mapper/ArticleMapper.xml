@@ -139,24 +139,7 @@
             <if test="status == 1">NOW()</if><if test="status != 1">NULL</if>)
     </insert>
     
-    <update id="update">
-        UPDATE article
-        <set>
-            <if test="title != null">title = #{title},</if>
-            <if test="summary != null">summary = #{summary},</if>
-            <if test="content != null">content = #{content},</if>
-            <if test="htmlContent != null">html_content = #{htmlContent},</if>
-            <if test="coverImage != null">cover_image = #{coverImage},</if>
-            <if test="categoryId != null">category_id = #{categoryId},</if>
-            <if test="status != null">
-                status = #{status},
-                <if test="status == 1">publish_time = NOW(),</if>
-            </if>
-            <if test="isTop != null">is_top = #{isTop},</if>
-            <if test="isRecommend != null">is_recommend = #{isRecommend}</if>
-        </set>
-        WHERE id = #{id}
-    </update>
+    <!-- 注意：update 方法由 MyBatis-Plus BaseMapper 提供，不需要在 XML 中定义 -->
     
     <delete id="deleteById">
         DELETE FROM article WHERE id = #{id}
