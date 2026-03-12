@@ -1,6 +1,7 @@
 package com.ykw.blog_system.service;
 
 import com.ykw.blog_system.dto.ArticleDTO;
+import com.ykw.blog_system.dto.ArticleOperationDTO;
 import com.ykw.blog_system.dto.ArticleQueryDTO;
 import com.ykw.blog_system.entity.Article;
 import com.ykw.blog_system.vo.ArticleVO;
@@ -28,8 +29,10 @@ public interface ArticleService {
     ResultVO<Void> deleteArticle(Long articleId, Long currentUserId);
     
     ResultVO<Void> likeArticle(Long articleId, Long userId);
-    
+
     ResultVO<Void> unlikeArticle(Long articleId, Long userId);
+
+    ResultVO<Void> operateArticle(ArticleOperationDTO operationDTO, Long userId);
 
     /**
      * 收藏文章

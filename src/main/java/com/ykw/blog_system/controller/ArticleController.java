@@ -119,6 +119,15 @@ public class ArticleController {
         Long userId = SecurityUtil.getCurrentUserId();
         return articleService.uncollectArticle(articleId, userId);
     }
+
+    /**
+     * 统一操作接口（点赞、取消点赞、收藏、取消收藏）
+     */
+    @PostMapping("/operate")
+    public ResultVO<Void> operateArticle(@Valid @RequestBody ArticleOperationDTO operationDTO) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return articleService.operateArticle(operationDTO, userId);
+    }
     
     /**
      * 获取热门文章

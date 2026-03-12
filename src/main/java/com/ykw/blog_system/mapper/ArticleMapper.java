@@ -21,6 +21,14 @@ public interface ArticleMapper extends BaseMapper<Article> {
     int updateCollectionCount(@Param("articleId") Long articleId, @Param("increment") Integer increment);
 
 
+    /**
+     * 增加文章点赞数
+     */
+    @Update("UPDATE article SET like_count = like_count + #{increment} WHERE id = #{articleId}")
+    int updateLikeCount(@Param("articleId") Long articleId, @Param("increment") Integer increment);
+
+
+
 
 
     @Select("SELECT a.*, u.nickname AS author_name, u.avatar AS author_avatar, c.name AS category_name " +

@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.dto.ArticleDTO;
+import com.ykw.blog_system.dto.ArticleOperationDTO;
 import com.ykw.blog_system.dto.ArticleQueryDTO;
 import com.ykw.blog_system.entity.*;
+import com.ykw.blog_system.enums.ArticleOperationType;
 import com.ykw.blog_system.mapper.*;
 import com.ykw.blog_system.service.ArticleService;
 import com.ykw.blog_system.utils.SecurityUtil;
@@ -283,21 +285,79 @@ public class ArticleServiceImpl implements ArticleService {
         if (existingFoot == null || existingFoot.getPraiseStat() != 1) {
             return ResultVO.error("未点赞过");
         }
-        
+
         existingFoot.setPraiseStat(2);
         userFootMapper.updateById(existingFoot);
-        
-        articleMapper.update(null, 
+
+        articleMapper.update(null,
             new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Article>()
                 .setSql("like_count = like_count - 1")
                 .eq(Article::getId, articleId));
-        
+
+        return ResultVO.success();
+    }
+
+    @Override
+    @Transactional
+    public ResultVO<Void> operateArticle(ArticleOperationDTO operationDTO, Long userId) {
+        Long articleId = operationDTO.getArticleId();
+        // 检查文章是否存在
+        Article article = articleMapper.selectById(articleId);
+        if (article == null) {
+            return ResultVO.error("文章不存在,无法执行点赞或收藏");
+        }
+        // 检查用户是否曾经访问过文章
+        UserFoot userFoot = userFootMapper.selectByUserAndDocument(userId, articleId, 1);
+        // 如果用户没有访问过文章，则创建用户访问记录
+        if (userFoot == null) {
+            userFoot = new UserFoot();
+            userFoot.setUserId(userId);
+            userFoot.setDocumentId(articleId);
+            userFoot.setDocumentType(1);
+            userFoot.setDocumentUserId(article.getAuthorId());
+            userFoot.setPraiseStat(0);
+            userFoot.setReadStat(1);
+            userFoot.setCollectionStat(0);
+            userFoot.setCommentStat(0);
+            userFootMapper.insert(userFoot);
+        }
+        // 根据操作类型进行相应的处理
+        ArticleOperationType operationType = operationDTO.getOperationType();
+        switch (operationType) {
+            case LIKE:
+                if (userFoot.getPraiseStat() == 1) return ResultVO.error("已点赞过");
+                userFoot.setPraiseStat(1);
+                userFootMapper.updateById(userFoot);
+                articleMapper.updateLikeCount(articleId, 1);
+                recordUserBehavior(userId, articleId, "like", new BigDecimal("3.0"));
+                break;
+            case UNLIKE:
+                if (userFoot.getPraiseStat() != 1) return ResultVO.error("未点赞过");
+                userFoot.setPraiseStat(2);
+                userFootMapper.updateById(userFoot);
+                articleMapper.updateLikeCount(articleId, -1);
+                break;
+            case COLLECT:
+                if ( userFoot.getCollectionStat() == 1) return ResultVO.error("已收藏过");
+                userFoot.setCollectionStat(1);
+                userFootMapper.updateById(userFoot);
+                articleMapper.updateCollectionCount(articleId, 1);
+                recordUserBehavior(userId, articleId, "collect", new BigDecimal("5.0"));
+                break;
+            case UNCOLLECT:
+                if (userFoot.getCollectionStat() != 1) return ResultVO.error("未收藏过");
+                userFoot.setCollectionStat(2);
+                userFootMapper.updateById(userFoot);
+                articleMapper.updateCollectionCount(articleId, -1);
+                break;
+        }
+
         return ResultVO.success();
     }
     /**
      * 收藏文章
      */
-    
+
     @Override
     @Transactional
     public ResultVO<Void> collectArticle(Long articleId, Long userId) {
@@ -317,7 +377,7 @@ public class ArticleServiceImpl implements ArticleService {
         if (existingFoot != null && existingFoot.getCollectionStat() == 1) {
             return ResultVO.error("已收藏过");
         }
-        
+
         if (existingFoot == null) {
             UserFoot userFoot = new UserFoot();
             userFoot.setUserId(userId);
@@ -335,9 +395,9 @@ public class ArticleServiceImpl implements ArticleService {
         }
 
         articleMapper.updateCollectionCount(articleId, 1);
-        
+
         recordUserBehavior(userId, articleId, "collect", new BigDecimal("5.0"));
-        
+
         return ResultVO.success();
     }
 
@@ -355,15 +415,15 @@ public class ArticleServiceImpl implements ArticleService {
 
             return ResultVO.error("未收藏过");
         }
-        
+
         existingFoot.setCollectionStat(2);
         userFootMapper.updateById(existingFoot);
-        
+
         articleMapper.updateCollectionCount(articleId, -1);
-        
+
         return ResultVO.success();
     }
-    
+
     @Override
     public ResultVO<PageVO<ArticleVO>> getHotArticles(ArticleQueryDTO queryDTO) {
         Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
