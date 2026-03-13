@@ -171,7 +171,7 @@
     </select>
     
     <!-- 分页查询文章（支持多条件查询，包括标签） -->
-    <select id="selectArticlesByCondition" resultMap="ArticleWithAuthorResultMap">
+    <select id="selectArticlesByCondition" resultMap="BaseResultMap">
         SELECT 
             <include refid="Base_Column_List"/>
         FROM article a
@@ -194,16 +194,16 @@
             </if>
         </where>
         <choose>
-            <when test="queryDTO.orderBy == 'CREATE_TIME_ASC'">
+            <when test="queryDTO.orderBy.name == 'CREATE_TIME_ASC'">
                 ORDER BY a.create_time ASC
             </when>
-            <when test="queryDTO.orderBy == 'CREATE_TIME_DESC'">
+            <when test="queryDTO.orderBy.name == 'CREATE_TIME_DESC'">
                 ORDER BY a.create_time DESC
             </when>
-            <when test="queryDTO.orderBy == 'UPDATE_TIME_ASC'">
+            <when test="queryDTO.orderBy.name == 'UPDATE_TIME_ASC'">
                 ORDER BY a.update_time ASC
             </when>
-            <when test="queryDTO.orderBy == 'UPDATE_TIME_DESC'">
+            <when test="queryDTO.orderBy.name == 'UPDATE_TIME_DESC'">
                 ORDER BY a.update_time DESC
             </when>
             <otherwise>
