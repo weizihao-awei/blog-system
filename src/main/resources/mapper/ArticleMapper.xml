@@ -169,4 +169,46 @@
     <select id="sumViewCount" resultType="java.lang.Long">
         SELECT COALESCE(SUM(view_count), 0) FROM article WHERE status = 1
     </select>
+    
+    <!-- 分页查询文章（支持多条件查询，包括标签） -->
+    <select id="selectArticlesByCondition" resultMap="ArticleWithAuthorResultMap">
+        SELECT 
+            <include refid="Base_Column_List"/>
+        FROM article a
+        <if test="queryDTO.tagIds != null and !queryDTO.tagIds.isEmpty()">
+            INNER JOIN article_tag at ON a.id = at.article_id
+        </if>
+        <where>
+            a.status = 1
+            <if test="queryDTO.categoryId != null">
+                AND a.category_id = #{queryDTO.categoryId}
+            </if>
+            <if test="queryDTO.tagIds != null and !queryDTO.tagIds.isEmpty()">
+                AND at.tag_id IN
+                <foreach collection="queryDTO.tagIds" item="tagId" open="(" separator="," close=")">
+                    #{tagId}
+                </foreach>
+            </if>
+            <if test="queryDTO.keyword != null and queryDTO.keyword != ''">
+                AND (a.title LIKE CONCAT('%', #{queryDTO.keyword}, '%') OR a.summary LIKE CONCAT('%', #{queryDTO.keyword}, '%'))
+            </if>
+        </where>
+        <choose>
+            <when test="queryDTO.orderBy == 'CREATE_TIME_ASC'">
+                ORDER BY a.create_time ASC
+            </when>
+            <when test="queryDTO.orderBy == 'CREATE_TIME_DESC'">
+                ORDER BY a.create_time DESC
+            </when>
+            <when test="queryDTO.orderBy == 'UPDATE_TIME_ASC'">
+                ORDER BY a.update_time ASC
+            </when>
+            <when test="queryDTO.orderBy == 'UPDATE_TIME_DESC'">
+                ORDER BY a.update_time DESC
+            </when>
+            <otherwise>
+                ORDER BY a.create_time DESC
+            </otherwise>
+        </choose>
+    </select>
 </mapper>

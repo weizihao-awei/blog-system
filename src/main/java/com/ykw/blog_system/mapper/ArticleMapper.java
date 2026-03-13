@@ -2,6 +2,8 @@ package com.ykw.blog_system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ykw.blog_system.dto.ArticleQueryDTO;
 import com.ykw.blog_system.entity.Article;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -44,4 +46,9 @@ public interface ArticleMapper extends BaseMapper<Article> {
     Long countArticles(@Param("status") Integer status);
     
     Long sumViewCount();
+
+    /**
+     * 分页查询文章（支持多条件查询，包括标签）
+     */
+    Page<Article> selectArticlesByCondition(Page<Article> page, @Param("queryDTO") ArticleQueryDTO queryDTO);
 }

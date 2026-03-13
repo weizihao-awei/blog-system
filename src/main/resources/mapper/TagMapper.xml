@@ -39,6 +39,16 @@
         WHERE at.article_id = #{articleId} AND t.status = 1
     </select>
     
+    <select id="selectByArticleIds" resultMap="BaseResultMap">
+        SELECT t.* FROM tag t
+        INNER JOIN article_tag at ON t.id = at.tag_id
+        WHERE at.article_id IN
+        <foreach collection="articleIds" item="articleId" open="(" separator="," close=")">
+            #{articleId}
+        </foreach>
+        AND t.status = 1
+    </select>
+    
     <select id="selectHotTags" resultMap="BaseResultMap">
         SELECT t.*, COUNT(at.article_id) as article_count
         FROM tag t

@@ -427,21 +427,22 @@ interface PageVO<T> {
 **请求参数**:
 ```typescript
 interface ArticleQueryDTO {
-  pageNum?: number;      // 页码，默认1
-  pageSize?: number;    // 每页数量，默认10
-  categoryId?: number;   // 分类ID
-  tagId?: number;       // 标签ID
+  pageNum?: number;      // 页码，默认 1
+  pageSize?: number;    // 每页数量，默认 10
+  categoryId?: number;   // 分类 ID
+  tagIds?: number[];     // 标签 ID 数组（支持多标签查询）
   keyword?: string;      // 搜索关键词
-  orderBy?: string;     // 排序方式，默认"latest"
-                        // "latest" - 最新
-                        // "hot" - 热门
-                        // "recommend" - 推荐
+  orderBy?: string;     // 排序方式，默认"create_time_desc"
+                        // "create_time_asc" - 按创建时间升序（最早发布）
+                        // "create_time_desc" - 按创建时间降序（最新发布）
+                        // "update_time_asc" - 按更新时间升序（最早编辑）
+                        // "update_time_desc" - 按更新时间降序（最新编辑）
 }
 ```
 
 **请求示例**:
 ```json
-// 获取默认文章列表
+// 获取默认文章列表（按创建时间降序，最新发布）
 {}
 
 // 查询特定分类的文章
@@ -451,11 +452,18 @@ interface ArticleQueryDTO {
   "categoryId": 1
 }
 
-// 查询特定标签的文章
+// 查询特定标签的文章（单个标签）
 {
   "pageNum": 1,
   "pageSize": 10,
-  "tagId": 5
+  "tagIds": [5]
+}
+
+// 查询包含任意一个指定标签的文章（多标签）
+{
+  "pageNum": 1,
+  "pageSize": 10,
+  "tagIds": [1, 3, 5]
 }
 
 // 关键字搜索
@@ -465,20 +473,35 @@ interface ArticleQueryDTO {
   "keyword": "Java"
 }
 
-// 组合查询（分类 + 关键字 + 热门排序）
+// 组合查询（分类 + 标签 + 关键字 + 按创建时间升序）
 {
   "pageNum": 1,
   "pageSize": 10,
   "categoryId": 1,
+  "tagIds": [1, 2],
   "keyword": "Spring Boot",
-  "orderBy": "hot"
+  "orderBy": "create_time_asc"
 }
 
-// 查询推荐文章
+// 按更新时间降序（最新编辑）
 {
   "pageNum": 1,
   "pageSize": 10,
-  "orderBy": "recommend"
+  "orderBy": "update_time_desc"
+}
+
+// 按创建时间升序（最早发布）
+{
+  "pageNum": 1,
+  "pageSize": 10,
+  "orderBy": "create_time_asc"
+}
+
+// 按更新时间升序（最早编辑）
+{
+  "pageNum": 1,
+  "pageSize": 10,
+  "orderBy": "update_time_asc"
 }
 ```
 

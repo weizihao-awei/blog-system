@@ -1,6 +1,9 @@
 package com.ykw.blog_system.dto;
 
+import com.ykw.blog_system.enums.ArticleOrderEnum;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 文章查询 DTO
@@ -26,7 +29,7 @@ public class ArticleQueryDTO {
     /**
      * 标签 ID（可选）
      */
-    private Long tagId;
+    private List<Long> tagIds;
     
     /**
      * 关键字搜索（可选）
@@ -35,7 +38,8 @@ public class ArticleQueryDTO {
     
     /**
      * 排序方式（可选）
-     * latest: 最新，hot: 热门，recommend: 推荐
+     * 默认：create_time_desc（创建时间降序，最新发布）
+     * 支持：create_time_asc, create_time_desc, update_time_asc, update_time_desc
      */
-    private String orderBy = "latest";
+    private ArticleOrderEnum orderBy = ArticleOrderEnum.CREATE_TIME_DESC;
 }
