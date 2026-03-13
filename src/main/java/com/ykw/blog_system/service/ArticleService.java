@@ -30,12 +30,7 @@ public interface ArticleService {
 
     ResultVO<Void> operateArticle(ArticleOperationDTO operationDTO, Long userId);
 
-    /**
-     * 收藏文章
-     */
-    ResultVO<Void> collectArticle(Long articleId, Long userId);
-    
-    ResultVO<Void> uncollectArticle(Long articleId, Long userId);
+
     
     ResultVO<PageVO<ArticleVO>> getHotArticles(ArticleQueryDTO queryDTO);
     

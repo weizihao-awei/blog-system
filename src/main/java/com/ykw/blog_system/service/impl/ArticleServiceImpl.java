@@ -297,6 +297,7 @@ public class ArticleServiceImpl implements ArticleService {
         return ResultVO.success();
     }
 
+
     @Override
     public ResultVO<PageVO<ArticleVO>> getHotArticles(ArticleQueryDTO queryDTO) {
         Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
@@ -304,39 +305,14 @@ public class ArticleServiceImpl implements ArticleService {
         LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Article::getStatus, 1)
                 .orderByDesc(Article::getViewCount, Article::getLikeCount);
-            
-        // 分类 ID 过滤
-        if (queryDTO.getCategoryId() != null) {
-            wrapper.eq(Article::getCategoryId, queryDTO.getCategoryId());
-        }
-            
-        // 关键字过滤
-        if (queryDTO.getKeyword() != null && !queryDTO.getKeyword().isEmpty()) {
-            wrapper.and(w -> w.like(Article::getTitle, queryDTO.getKeyword())
-                    .or().like(Article::getSummary, queryDTO.getKeyword()));
-        }
-            
+
+
+
         Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
         List<Article> list = pageResult.getRecords();
-            
-        // 转换为 ArticleVO 并加载标签
-        List<ArticleVO> voList = new ArrayList<>();
-        for (Article article : list) {
-            ArticleVO articleVO = new ArticleVO();
-            BeanUtils.copyProperties(article, articleVO);
-                
-            // 加载标签
-            List<Tag> tags = tagMapper.selectByArticleId(article.getId());
-            List<TagVO> tagVOList = tags.stream().map(tag -> {
-                TagVO tagVO = new TagVO();
-                BeanUtils.copyProperties(tag, tagVO);
-                return tagVO;
-            }).collect(Collectors.toList());
-            articleVO.setTags(tagVOList);
-                
-            voList.add(articleVO);
-        }
-            
+        List<ArticleVO> voList = convertToVOList(list);
+
+
         PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(), 
                                                queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
@@ -348,7 +324,7 @@ public class ArticleServiceImpl implements ArticleService {
         
         LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Article::getStatus, 1)
-                .orderByDesc(Article::getIsTop, Article::getPublishTime);
+                .orderByDesc(Article::getPublishTime,Article::getIsTop);
         
         // 分类 ID 过滤
         if (queryDTO.getCategoryId() != null) {
@@ -375,15 +351,15 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ResultVO<PageVO<ArticleVO>> getRecommendArticles(Long userId, ArticleQueryDTO queryDTO) {
         List<Article> recommendArticles = new ArrayList<>();
-        
+
         if (userId != null) {
             List<UserBehavior> userBehaviors = userBehaviorMapper.selectByUserId(userId);
-            
+
             if (!userBehaviors.isEmpty()) {
                 recommendArticles = getCollaborativeFilteringRecommendations(userId, null);
             }
         }
-        
+
         if (recommendArticles.size() < queryDTO.getPageSize()) {
             List<Article> hotArticles = articleMapper.selectHotArticles(null);
             for (Article article : hotArticles) {
@@ -392,24 +368,24 @@ public class ArticleServiceImpl implements ArticleService {
                 }
             }
         }
-        
+
         int total = recommendArticles.size();
         int startIndex = (queryDTO.getPageNum() - 1) * queryDTO.getPageSize();
         int endIndex = Math.min(startIndex + queryDTO.getPageSize(), total);
-        
+
         List<Article> pagedArticles = new ArrayList<>();
         if (startIndex < total) {
             pagedArticles = recommendArticles.subList(startIndex, endIndex);
         }
-        
+
         // 转换为 ArticleVO 并加载标签
         List<ArticleVO> voList = convertToVOList(pagedArticles);
-        
-        PageVO<ArticleVO> pageVO = new PageVO<>(voList, (long) total, 
+
+        PageVO<ArticleVO> pageVO = new PageVO<>(voList, (long) total,
                                                queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
     }
-    
+
     /**
      * 基于协同过滤的推荐算法
      */
@@ -420,7 +396,7 @@ public class ArticleServiceImpl implements ArticleService {
                 .map(UserBehavior::getArticleId)
                 .distinct()
                 .collect(Collectors.toList());
-        
+
         // 获取这些文章的标签
         List<Long> interestedTagIds = new ArrayList<>();
         for (Long articleId : viewedArticleIds) {
@@ -430,47 +406,47 @@ public class ArticleServiceImpl implements ArticleService {
         // 获取所有文章（排除已删除的），用于计算推荐得分
         List<Article> allArticles = articleMapper.selectList(new LambdaQueryWrapper<Article>()
                 .eq(Article::getStatus, 1));
-        
+
         // 计算每篇文章的推荐得分并排序
         return allArticles.stream()
                 .filter(article -> !viewedArticleIds.contains(article.getId()))
                 .sorted((a1, a2) -> {
-                    double score1 = calculateRecommendationScore(a1, 
+                    double score1 = calculateRecommendationScore(a1,
                         tagMapper.selectByArticleId(a1.getId()), interestedTagIds, behaviors);
-                    double score2 = calculateRecommendationScore(a2, 
+                    double score2 = calculateRecommendationScore(a2,
                         tagMapper.selectByArticleId(a2.getId()), interestedTagIds, behaviors);
                     return Double.compare(score2, score1);
                 })
                 .limit(limit != null ? limit : allArticles.size())
                 .collect(Collectors.toList());
     }
-    
+
     /**
      * 计算推荐得分
      */
-    private double calculateRecommendationScore(Article article, List<Tag> articleTags, 
-                                                 List<Long> interestedTagIds, 
+    private double calculateRecommendationScore(Article article, List<Tag> articleTags,
+                                                 List<Long> interestedTagIds,
                                                  List<UserBehavior> behaviors) {
         double score = 0;
-        
+
         // 标签匹配得分
         for (Tag tag : articleTags) {
             if (interestedTagIds.contains(tag.getId())) {
                 score += 2;
             }
         }
-        
+
         // 热度得分
         score += article.getViewCount() * 0.001;
         score += article.getLikeCount() * 0.01;
-        
+
         // 时间衰减因子（新文章得分更高）
         long daysSincePublish = java.time.Duration.between(
                 article.getPublishTime() != null ? article.getPublishTime() : article.getCreateTime(),
                 java.time.LocalDateTime.now()).toDays();
         double timeFactor = Math.max(0.1, 1 - daysSincePublish * 0.01);
         score *= timeFactor;
-        
+
         return score;
     }
     
