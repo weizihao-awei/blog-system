@@ -12,27 +12,22 @@ import java.util.List;
  * 标签Mapper接口
  */
 @Mapper
-public interface TagMapper  extends BaseMapper<Tag> {
+public interface TagMapper extends BaseMapper<Tag> {
     
-    Tag selectById(Long id);
+    // 以下方法为多表联查或复杂查询，保留 XML 实现
     
-    Tag selectByName(String name);
-    
-    int insert(Tag tag);
-    
-    int update(Tag tag);
-    
-    int deleteById(Long id);
-    
-    List<Tag> selectList(@Param("status") Integer status);
-    
+    /**
+     * 根据文章 ID 查询标签列表 (多表联查)
+     */
     List<Tag> selectByArticleId(Long articleId);
     
+    /**
+     * 根据多个文章 ID 批量查询标签 (多表联查)
+     */
     List<Tag> selectByArticleIds(@Param("articleIds") List<Long> articleIds);
     
+    /**
+     * 查询热门标签 (带统计排序)
+     */
     List<Tag> selectHotTags(@Param("limit") Integer limit);
-    
-    Long countTags();
-    
-    List<Tag> selectPage(Page<Tag> page);
 }

@@ -1,5 +1,6 @@
 package com.ykw.blog_system.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.dto.TagDTO;
 import com.ykw.blog_system.entity.Tag;
@@ -29,7 +30,11 @@ public class TagServiceImpl implements TagService {
     
     @Override
     public ResultVO<List<Tag>> getTagList() {
-        List<Tag> list = tagMapper.selectList(1);
+        // 使用 MyBatis-Plus LambdaQueryWrapper 查询
+        LambdaQueryWrapper<Tag> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Tag::getStatus, 1)
+                .orderByDesc(Tag::getCreateTime);
+        List<Tag> list = tagMapper.selectList(wrapper);
         return ResultVO.success(list);
     }
     
@@ -41,6 +46,7 @@ public class TagServiceImpl implements TagService {
     
     @Override
     public ResultVO<Tag> getTagDetail(Long tagId) {
+        // 使用 MyBatis-Plus selectById 方法
         Tag tag = tagMapper.selectById(tagId);
         if (tag == null) {
             return ResultVO.error("标签不存在");
@@ -51,8 +57,10 @@ public class TagServiceImpl implements TagService {
     @Override
     @Transactional
     public ResultVO<Long> createTag(TagDTO tagDTO) {
-        // 检查标签名是否已存在
-        if (tagMapper.selectByName(tagDTO.getName()) != null) {
+        // 使用 MyBatis-Plus 检查标签名是否已存在
+        LambdaQueryWrapper<Tag> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Tag::getName, tagDTO.getName());
+        if (tagMapper.selectOne(wrapper) != null) {
             return ResultVO.error("标签名称已存在");
         }
         
@@ -60,6 +68,7 @@ public class TagServiceImpl implements TagService {
         BeanUtils.copyProperties(tagDTO, tag);
         tag.setStatus(1);
         
+        // 使用 MyBatis-Plus insert 方法
         tagMapper.insert(tag);
         
         return ResultVO.success("创建成功", tag.getId());
@@ -68,20 +77,24 @@ public class TagServiceImpl implements TagService {
     @Override
     @Transactional
     public ResultVO<Void> updateTag(TagDTO tagDTO) {
+        // 使用 MyBatis-Plus selectById 方法
         Tag existingTag = tagMapper.selectById(tagDTO.getId());
         if (existingTag == null) {
             return ResultVO.error("标签不存在");
         }
         
         // 检查新名称是否与其他标签重复
-        Tag nameTag = tagMapper.selectByName(tagDTO.getName());
-        if (nameTag != null && !nameTag.getId().equals(tagDTO.getId())) {
+        LambdaQueryWrapper<Tag> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Tag::getName, tagDTO.getName())
+                .ne(Tag::getId, tagDTO.getId());
+        if (tagMapper.selectOne(wrapper) != null) {
             return ResultVO.error("标签名称已存在");
         }
         
+        // 使用 MyBatis-Plus updateById 方法
         Tag tag = new Tag();
         BeanUtils.copyProperties(tagDTO, tag);
-        tagMapper.update(tag);
+        tagMapper.updateById(tag);
         
         return ResultVO.success();
     }
@@ -91,7 +104,7 @@ public class TagServiceImpl implements TagService {
     public ResultVO<Void> deleteTag(Long tagId) {
         // 删除标签与文章的关联
         articleTagMapper.deleteByTagId(tagId);
-        // 删除标签
+        // 使用 MyBatis-Plus deleteById 方法
         tagMapper.deleteById(tagId);
         return ResultVO.success();
     }
@@ -101,13 +114,17 @@ public class TagServiceImpl implements TagService {
         // 创建 Page 对象
         Page<Tag> page = new Page<>(pageNum, pageSize);
         
-        // 执行分页查询
-        List<Tag> list = tagMapper.selectPage(page);
+        // 使用 MyBatis-Plus 分页查询
+        LambdaQueryWrapper<Tag> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(Tag::getCreateTime);
+        
+        Page<Tag> pageResult = tagMapper.selectPage(page, wrapper);
+        List<Tag> list = pageResult.getRecords();
         
         // 构建分页结果
         PageVO<Tag> pageVO = new PageVO<>(
             list, 
-            page.getTotal(), 
+            pageResult.getTotal(), 
             pageNum, 
             pageSize
         );

@@ -1,31 +1,13 @@
 package com.ykw.blog_system.mapper;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.ykw.blog_system.entity.Category;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-
-import java.util.List;
 
 /**
- * 分类Mapper接口
+ * 分类 Mapper 接口
  */
 @Mapper
-public interface CategoryMapper {
-    
-    Category selectById(Long id);
-    
-    Category selectByName(String name);
-    
-    int insert(Category category);
-    
-    int update(Category category);
-    
-    int deleteById(Long id);
-    
-    List<Category> selectList(@Param("status") Integer status);
-    
-    Long countCategories();
-    
-    List<Category> selectPage(Page<Category> page);
+public interface CategoryMapper extends BaseMapper<Category> {
+    // 所有单表查询方法已移除，直接使用 BaseMapper 提供的方法
 }
