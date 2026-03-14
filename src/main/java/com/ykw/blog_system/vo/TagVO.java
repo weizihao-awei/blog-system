@@ -14,8 +14,6 @@ public class TagVO {
     
     private String name;
     
-    private String color;
-    
     private Integer articleCount;
     
     private LocalDateTime createTime;

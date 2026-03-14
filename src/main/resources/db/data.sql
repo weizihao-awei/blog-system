@@ -19,22 +19,22 @@ INSERT INTO `category` (`name`, `description`, `sort_order`, `status`) VALUES
 ('面试经验', '面试题解析、求职经验', 5, 1);
 
 -- 插入标签
-INSERT INTO `tag` (`name`, `color`, `status`) VALUES
-('Java', '#E74C3C', 1),
-('Spring Boot', '#6DB33F', 1),
-('MySQL', '#4479A1', 1),
-('Redis', '#DC382D', 1),
-('前端', '#61DAFB', 1),
-('Vue', '#4FC08D', 1),
-('React', '#61DAFB', 1),
-('算法', '#FF6B6B', 1),
-('架构', '#9B59B6', 1),
-('面试', '#F39C12', 1),
-('微服务', '#2ECC71', 1),
-('Docker', '#2496ED', 1),
-('Linux', '#FCC624', 1),
-('Git', '#F05032', 1),
-('设计模式', '#E91E63', 1);
+INSERT INTO `tag` (`name`, `status`) VALUES
+('Java', 1),
+('Spring Boot', 1),
+('MySQL', 1),
+('Redis', 1),
+('前端', 1),
+('Vue', 1),
+('React', 1),
+('算法', 1),
+('架构', 1),
+('面试', 1),
+('微服务', 1),
+('Docker', 1),
+('Linux', 1),
+('Git', 1),
+('设计模式', 1);
 
 -- 插入文章
 INSERT INTO `article` (`title`, `summary`, `content`, `html_content`, `author_id`, `category_id`, `view_count`, `like_count`, `comment_count`, `status`, `is_top`, `is_recommend`, `publish_time`) VALUES

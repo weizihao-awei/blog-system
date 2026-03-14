@@ -36,9 +36,8 @@ CREATE TABLE IF NOT EXISTS `category` (
 
 -- 标签表
 CREATE TABLE IF NOT EXISTS `tag` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '标签ID',
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '标签 ID',
     `name` VARCHAR(50) NOT NULL COMMENT '标签名称',
-    `color` VARCHAR(20) DEFAULT '#409EFF' COMMENT '标签颜色',
     `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`),
@@ -157,17 +156,17 @@ INSERT INTO `category` (`name`, `description`, `sort_order`, `status`) VALUES
 ('项目实战', '项目开发经验总结', 4, 1);
 
 -- 插入默认标签
-INSERT INTO `tag` (`name`, `color`, `status`) VALUES
-('Java', '#E74C3C', 1),
-('Spring Boot', '#6DB33F', 1),
-('MySQL', '#4479A1', 1),
-('Redis', '#DC382D', 1),
-('前端', '#61DAFB', 1),
-('Vue', '#4FC08D', 1),
-('React', '#61DAFB', 1),
-('算法', '#FF6B6B', 1),
-('架构', '#9B59B6', 1),
-('面试', '#F39C12', 1);
+INSERT INTO `tag` (`name`, `status`) VALUES
+('Java', 1),
+('Spring Boot', 1),
+('MySQL', 1),
+('Redis', 1),
+('前端', 1),
+('Vue', 1),
+('React', 1),
+('算法', 1),
+('架构', 1),
+('面试', 1);
 
 -- 插入系统配置
 INSERT INTO `system_config` (`config_key`, `config_value`, `description`) VALUES

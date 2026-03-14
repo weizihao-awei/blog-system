@@ -5,14 +5,13 @@
     <resultMap id="BaseResultMap" type="com.ykw.blog_system.entity.Tag">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
-        <result column="color" property="color"/>
         <result column="status" property="status"/>
         <result column="create_time" property="createTime"/>
         <result column="article_count" property="articleCount"/>
     </resultMap>
     
     <sql id="Base_Column_List">
-        id, name, color, status, create_time
+        id, name, status, create_time
     </sql>
     
     <select id="selectById" resultMap="BaseResultMap">
@@ -61,15 +60,14 @@
     </select>
     
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO tag (name, color, status)
-        VALUES (#{name}, #{color}, #{status})
+        INSERT INTO tag (name, status)
+        VALUES (#{name}, #{status})
     </insert>
     
     <update id="update">
         UPDATE tag
         <set>
             <if test="name != null">name = #{name},</if>
-            <if test="color != null">color = #{color},</if>
             <if test="status != null">status = #{status}</if>
         </set>
         WHERE id = #{id}
