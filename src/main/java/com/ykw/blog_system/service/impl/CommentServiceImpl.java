@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -81,34 +83,84 @@ public class CommentServiceImpl implements CommentService {
         
         return rootComments;
     }
-    
+
     /**
-     * 查找子评论（返回 SubCommentVO 列表）
+     * 查找所有子评论（返回同一层级的 SubCommentVO 列表，包含所有后代评论）
      */
     private List<SubCommentVO> findSubComments(CommentVO parentCommentVO, List<Comment> allComments) {
-        List<SubCommentVO> children = new ArrayList<>();
-        
-        for (Comment comment : allComments) {
-            if (parentCommentVO.getId().equals(comment.getParentId())) {
-                SubCommentVO subCommentVO = new SubCommentVO();
-                BeanUtils.copyProperties(comment, subCommentVO);
-                //todo：这种依次效率很低
-                User user = userMapper.selectById(comment.getUserId());
-                subCommentVO.setUsername(user.getUsername());
-                subCommentVO.setUserAvatar(user.getAvatar());
-                children.add(subCommentVO);
+        List<SubCommentVO> allDescendants = new ArrayList<>();
 
-                //装载父级评论信息
-                subCommentVO.setParentId(parentCommentVO.getId());
-                subCommentVO.setReplyToUserId(parentCommentVO.getUserId());
-                subCommentVO.setReplyToUsername(user.getUsername());
-                subCommentVO.setReplyToUserAvatar(user.getAvatar());
+        // 用于记录已经处理过的评论ID，避免循环引用
+        Set<Long> processedIds = new HashSet<>();
+
+        // 递归查找所有后代评论
+        findAllDescendants(parentCommentVO.getId(), allComments, allDescendants, processedIds);
+
+        // 排序
+        if (!allDescendants.isEmpty()) {
+            allDescendants.sort(SubCommentVO::compareTo);
+        }
+
+        return allDescendants.isEmpty() ? null : allDescendants;
+    }
+
+    /**
+     * 递归查找所有后代评论
+     */
+    private void findAllDescendants(Long parentId, List<Comment> allComments,
+                                    List<SubCommentVO> result, Set<Long> processedIds) {
+        // 防止循环引用
+        if (processedIds.contains(parentId)) {
+            return;
+        }
+        processedIds.add(parentId);
+
+        // 查找当前父ID的直接子评论
+        List<Comment> directChildren = new ArrayList<>();
+        for (Comment comment : allComments) {
+            if (parentId.equals(comment.getParentId())) {
+                directChildren.add(comment);
             }
         }
-        //进行排序
-        children.sort(SubCommentVO::compareTo);
-        
-        return children.isEmpty() ? null : children;
+
+        // 处理每个直接子评论
+        for (Comment comment : directChildren) {
+            // 转换为 SubCommentVO
+            SubCommentVO subCommentVO = new SubCommentVO();
+            BeanUtils.copyProperties(comment, subCommentVO);
+
+            // 设置用户信息
+            User user = userMapper.selectById(comment.getUserId());
+            subCommentVO.setUsername(user.getUsername());
+            subCommentVO.setUserAvatar(user.getAvatar());
+
+            // 设置父级评论信息（这里需要找到这个评论的直接父评论的用户信息）
+            Comment parentComment = findCommentById(allComments, comment.getParentId());
+            if (parentComment != null) {
+                User parentUser = userMapper.selectById(parentComment.getUserId());
+                subCommentVO.setParentId(parentComment.getId());
+                subCommentVO.setReplyToUserId(parentUser.getId());
+                subCommentVO.setReplyToUsername(parentUser.getUsername());
+                subCommentVO.setReplyToUserAvatar(parentUser.getAvatar());
+            }
+
+            result.add(subCommentVO);
+
+            // 递归查找当前评论的后代
+            findAllDescendants(comment.getId(), allComments, result, processedIds);
+        }
+    }
+
+    /**
+     * 根据ID查找评论
+     */
+    private Comment findCommentById(List<Comment> allComments, Long id) {
+        for (Comment comment : allComments) {
+            if (comment.getId().equals(id)) {
+                return comment;
+            }
+        }
+        return null;
     }
     
     /**
