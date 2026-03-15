@@ -83,6 +83,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/comment/list/**").permitAll()
                 .requestMatchers("/api/statistics").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
+                // 放行图片访问接口（静态资源）
+                .requestMatchers("/api/image/**").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 // 其他接口需要认证
                 .anyRequest().authenticated()
