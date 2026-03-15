@@ -18,7 +18,7 @@ public interface CommentService {
     
     ResultVO<Void> deleteComment(Long commentId, Long currentUserId);
     
-    ResultVO<Void> updateCommentStatus(Long commentId, Integer status);
-    
-    ResultVO<PageVO<CommentVO>> getAdminCommentList(Integer pageNum, Integer pageSize, Integer status);
+//    ResultVO<Void> updateCommentStatus(Long commentId, Integer status);
+//
+//    ResultVO<PageVO<CommentVO>> getAdminCommentList(Integer pageNum, Integer pageSize, Integer status);
 }

@@ -1,5 +1,6 @@
 package com.ykw.blog_system.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.dto.CommentDTO;
 import com.ykw.blog_system.entity.Comment;
@@ -39,7 +40,12 @@ public class CommentServiceImpl implements CommentService {
     
     @Override
     public ResultVO<List<CommentVO>> getCommentList(Long articleId) {
-        List<Comment> comments = commentMapper.selectByArticleId(articleId, 1);
+        List<Comment> comments = commentMapper.selectList(
+            new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getArticleId, articleId)
+                .eq(Comment::getStatus, 1)
+        );
+
 
         // 构建评论树
         List<CommentVO> commentVOList = buildCommentTree(comments);
@@ -154,41 +160,44 @@ public class CommentServiceImpl implements CommentService {
      * 递归删除评论及其子评论
      */
     private void deleteCommentAndChildren(Long commentId) {
-        List<Comment> children = commentMapper.selectByParentId(commentId);
+        List<Comment> children = commentMapper.selectList(
+            new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getParentId, commentId)
+        );
         for (Comment child : children) {
             deleteCommentAndChildren(child.getId());
         }
         commentMapper.deleteById(commentId);
     }
     
-    @Override
-    public ResultVO<Void> updateCommentStatus(Long commentId, Integer status) {
-        Comment comment = new Comment();
-        comment.setId(commentId);
-        comment.setStatus(status);
-        commentMapper.update(comment);
-        return ResultVO.success();
-    }
+//    @Override
+//    public ResultVO<Void> updateCommentStatus(Long commentId, Integer status) {
+//        Comment comment = new Comment();
+//        comment.setId(commentId);
+//        comment.setStatus(status);
+//        commentMapper.updateById(comment);
+//        return ResultVO.success();
+//    }
     
-    @Override
-    public ResultVO<PageVO<CommentVO>> getAdminCommentList(Integer pageNum, Integer pageSize, Integer status) {
-        // 创建 Page 对象
-        Page<Comment> page = new Page<>(pageNum, pageSize);
-        
-        // 执行分页查询
-        List<Comment> list = commentMapper.selectPage(page, status);
-        
-        // 转换为 VO 列表
-        List<CommentVO> voList = list.stream().map(this::convertToVO).collect(Collectors.toList());
-        
-        // 构建分页结果
-        PageVO<CommentVO> pageVO = new PageVO<>(
-            voList, 
-            page.getTotal(), 
-            pageNum, 
-            pageSize
-        );
-        
-        return ResultVO.success(pageVO);
-    }
+//    @Override
+//    public ResultVO<PageVO<CommentVO>> getAdminCommentList(Integer pageNum, Integer pageSize, Integer status) {
+//        // 创建 Page 对象
+//        Page<Comment> page = new Page<>(pageNum, pageSize);
+//
+//        // 执行分页查询
+//        List<Comment> list = commentMapper.selectPage(page, status);
+//
+//        // 转换为 VO 列表
+//        List<CommentVO> voList = list.stream().map(this::convertToVO).collect(Collectors.toList());
+//
+//        // 构建分页结果
+//        PageVO<CommentVO> pageVO = new PageVO<>(
+//            voList,
+//            page.getTotal(),
+//            pageNum,
+//            pageSize
+//        );
+//
+//        return ResultVO.success(pageVO);
+//    }
 }

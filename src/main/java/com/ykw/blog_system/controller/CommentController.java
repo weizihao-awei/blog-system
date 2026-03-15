@@ -49,24 +49,24 @@ public class CommentController {
         return commentService.deleteComment(commentId, currentUserId);
     }
     
-    /**
-     * 更新评论状态（管理员）
-     */
-    @PutMapping("/{commentId}/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResultVO<Void> updateCommentStatus(@PathVariable Long commentId, @PathVariable Integer status) {
-        return commentService.updateCommentStatus(commentId, status);
-    }
-    
-    /**
-     * 获取评论列表（管理员分页）
-     */
-    @GetMapping("/admin-list")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResultVO<PageVO<CommentVO>> getAdminCommentList(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) Integer status) {
-        return commentService.getAdminCommentList(pageNum, pageSize, status);
-    }
+//    /**
+//     * 更新评论状态（管理员）
+//     */
+//    @PutMapping("/{commentId}/status/{status}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResultVO<Void> updateCommentStatus(@PathVariable Long commentId, @PathVariable Integer status) {
+//        return commentService.updateCommentStatus(commentId, status);
+//    }
+//
+//    /**
+//     * 获取评论列表（管理员分页）
+//     */
+//    @GetMapping("/admin-list")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResultVO<PageVO<CommentVO>> getAdminCommentList(
+//            @RequestParam(defaultValue = "1") Integer pageNum,
+//            @RequestParam(defaultValue = "10") Integer pageSize,
+//            @RequestParam(required = false) Integer status) {
+//        return commentService.getAdminCommentList(pageNum, pageSize, status);
+//    }
 }

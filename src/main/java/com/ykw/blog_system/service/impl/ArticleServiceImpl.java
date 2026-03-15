@@ -199,7 +199,8 @@ public class ArticleServiceImpl implements ArticleService {
         
         articleMapper.deleteById(articleId);
         articleTagMapper.deleteByArticleId(articleId);
-        commentMapper.deleteByArticleId(articleId);
+        // 使用 BaseMapper 的标准 delete 方法，通过 LambdaQueryWrapper 构建条件
+        commentMapper.delete(new LambdaQueryWrapper<Comment>().eq(Comment::getArticleId, articleId));
         
         return ResultVO.success();
     }

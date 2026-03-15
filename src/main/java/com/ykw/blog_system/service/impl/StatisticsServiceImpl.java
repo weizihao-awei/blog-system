@@ -1,5 +1,7 @@
 package com.ykw.blog_system.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.ykw.blog_system.entity.Comment;
 import com.ykw.blog_system.mapper.*;
 import com.ykw.blog_system.service.StatisticsService;
 import com.ykw.blog_system.vo.ResultVO;
@@ -29,10 +31,9 @@ public class StatisticsServiceImpl implements StatisticsService {
         statisticsVO.setUserCount(userMapper.countUsers());
         statisticsVO.setArticleCount(articleMapper.countArticles(1));
         statisticsVO.setViewCount(articleMapper.sumViewCount());
-        statisticsVO.setCommentCount(commentMapper.countComments(1));
+        statisticsVO.setCommentCount(commentMapper.selectCount(new LambdaQueryWrapper<Comment>().eq(Comment::getStatus, 1)));
         statisticsVO.setTodayViewCount(0L); // 简化处理
         statisticsVO.setWeekArticleCount(0L); // 简化处理
-        
         return ResultVO.success(statisticsVO);
     }
 }
