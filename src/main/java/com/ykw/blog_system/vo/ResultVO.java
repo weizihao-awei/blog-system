@@ -34,6 +34,13 @@ public class ResultVO<T> {
         result.setData(data);
         return result;
     }
+    // 带消息
+    public static <T> ResultVO<T> success(String message) {
+        ResultVO<T> result = new ResultVO<>();
+        result.setCode(200);
+        result.setMessage(message);
+        return result;
+    }
     
     public static <T> ResultVO<T> success(String message, T data) {
         ResultVO<T> result = new ResultVO<>();

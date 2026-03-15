@@ -47,3 +47,7 @@ logging:
   level:
     com.ykw.blog_system.mapper: debug
 
+file:
+  upload:
+    path: D:/uploads/
+

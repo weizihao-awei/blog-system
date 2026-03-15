@@ -1,6 +1,7 @@
 package com.ykw.blog_system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.entity.UserFoot;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -40,4 +41,28 @@ public interface UserFootMapper extends BaseMapper<UserFoot> {
             "AND collection_stat = 1")
     Long countCollectionByDocumentId(@Param("documentId") Long documentId,
                                      @Param("documentType") Integer documentType);
+
+    /**
+     * 分页查询用户收藏记录
+     */
+    Page<UserFoot> selectCollectionPage(Page<UserFoot> page,
+                                        @Param("userId") Long userId,
+                                        @Param("documentType") Integer documentType,
+                                        @Param("order") String order);
+
+    /**
+     * 分页查询用户点赞记录
+     */
+    Page<UserFoot> selectPraisePage(Page<UserFoot> page,
+                                    @Param("userId") Long userId,
+                                    @Param("documentType") Integer documentType,
+                                    @Param("order") String order);
+
+    /**
+     * 分页查询用户浏览记录
+     */
+    Page<UserFoot> selectReadPage(Page<UserFoot> page,
+                                  @Param("userId") Long userId,
+                                  @Param("documentType") Integer documentType,
+                                  @Param("order") String order);
 }

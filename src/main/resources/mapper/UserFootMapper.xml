@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ykw.blog_system.mapper.UserFootMapper">
+    
+    <resultMap id="BaseResultMap" type="com.ykw.blog_system.entity.UserFoot">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="document_id" property="documentId"/>
+        <result column="document_type" property="documentType"/>
+        <result column="document_user_id" property="documentUserId"/>
+        <result column="collection_stat" property="collectionStat"/>
+        <result column="read_stat" property="readStat"/>
+        <result column="comment_stat" property="commentStat"/>
+        <result column="praise_stat" property="praiseStat"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        id, user_id, document_id, document_type, document_user_id, 
+        collection_stat, read_stat, comment_stat, praise_stat, create_time, update_time
+    </sql>
+    
+    <!-- 分页查询用户收藏记录 -->
+    <select id="selectCollectionPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> 
+        FROM user_foot
+        WHERE user_id = #{userId} 
+        AND document_type = #{documentType}
+        AND collection_stat = 1
+        <if test="order == 'asc'">
+            ORDER BY create_time ASC
+        </if>
+        <if test="order != 'asc'">
+            ORDER BY create_time DESC
+        </if>
+    </select>
+    
+    <!-- 分页查询用户点赞记录 -->
+    <select id="selectPraisePage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> 
+        FROM user_foot
+        WHERE user_id = #{userId} 
+        AND document_type = #{documentType}
+        AND praise_stat = 1
+        <if test="order == 'asc'">
+            ORDER BY create_time ASC
+        </if>
+        <if test="order != 'asc'">
+            ORDER BY create_time DESC
+        </if>
+    </select>
+    
+    <!-- 分页查询用户浏览记录 -->
+    <select id="selectReadPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> 
+        FROM user_foot
+        WHERE user_id = #{userId} 
+        AND document_type = #{documentType}
+        AND read_stat = 1
+        <if test="order == 'asc'">
+            ORDER BY create_time ASC
+        </if>
+        <if test="order != 'asc'">
+            ORDER BY create_time DESC
+        </if>
+    </select>
+</mapper>

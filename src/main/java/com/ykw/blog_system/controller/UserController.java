@@ -1,15 +1,23 @@
 package com.ykw.blog_system.controller;
 
-import com.ykw.blog_system.entity.User;
+import com.ykw.blog_system.dto.UserFootQueryDTO;
+import com.ykw.blog_system.entity.*;
+import com.ykw.blog_system.mapper.*;
 import com.ykw.blog_system.service.UserService;
 import com.ykw.blog_system.utils.SecurityUtil;
+import com.ykw.blog_system.vo.ArticleVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
+import com.ykw.blog_system.vo.TagVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 用户控制器
@@ -20,7 +28,7 @@ public class UserController {
     
     @Autowired
     private UserService userService;
-    
+
     /**
      * 获取当前用户信息
      */
@@ -39,6 +47,42 @@ public class UserController {
         return userService.updateUserInfo(user);
     }
     
+    /**
+     * 查询用户收藏的文章
+     */
+    @PostMapping("/foot/collection")
+    public ResultVO<PageVO<ArticleVO>> getUserCollection(@RequestBody UserFootQueryDTO queryDTO) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return userService.getCollectionArticlesPage(userId, queryDTO);
+    }
+    
+    /**
+     * 查询用户点赞的文章
+     */
+    @PostMapping("/foot/praise")
+    public ResultVO<PageVO<ArticleVO>> getUserPraise(@RequestBody UserFootQueryDTO queryDTO) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return userService.getPraiseArticlesPage(userId, queryDTO);
+    }
+    
+    /**
+     * 查询用户浏览的文章
+     */
+    @PostMapping("/foot/read")
+    public ResultVO<PageVO<ArticleVO>> getUserRead(@RequestBody UserFootQueryDTO queryDTO) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return userService.getReadArticlesPage(userId, queryDTO);
+    }
+    
+    /**
+     * 查询用户发布的文章
+     */
+    @PostMapping("/articles/published")
+    public ResultVO<PageVO<ArticleVO>> getUserPublishedArticles(@RequestBody UserFootQueryDTO queryDTO) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return userService.getUserPublishedArticlesPage(userId, queryDTO);
+    }
+
 //    /**
 //     * 获取用户列表（管理员）
 //     */

@@ -34,6 +34,9 @@ public class ArticleServiceImpl implements ArticleService {
     
     @Autowired
     private ArticleMapper articleMapper;
+
+    @Autowired
+    private CategoryMapper categoryMapper;
     
     @Autowired
     private TagMapper tagMapper;
@@ -551,6 +554,10 @@ public class ArticleServiceImpl implements ArticleService {
                 articleVO.setIsCollected(userFoot.getCollectionStat() == 1);
                 articleVO.setIsLiked(userFoot.getPraiseStat() == 1);
             }
+
+            // 加载分类信息
+            Category category = categoryMapper.selectById(article.getCategoryId());
+            articleVO.setCategoryName(category.getName());
 
             voList.add(articleVO);
         }

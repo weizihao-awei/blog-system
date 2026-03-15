@@ -25,3 +25,8 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+# 文件上传路径（生产环境请修改为实际可写路径）
+file:
+  upload:
+    path: /var/uploads/
