@@ -116,11 +116,11 @@ CREATE TABLE IF NOT EXISTS `user_behavior` (
 
 -- 用户足迹表（统一管理点赞、收藏）
 CREATE TABLE IF NOT EXISTS `user_foot` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
-  `user_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '用户 ID',
-  `document_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '文档 ID（文章/评论）',
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
+  `user_id` BIGINT NOT NULL DEFAULT '0' COMMENT '用户 ID',
+  `document_id` BIGINT NOT NULL DEFAULT '0' COMMENT '文档 ID（文章/评论）',
   `document_type` tinyint(4) NOT NULL DEFAULT '1' COMMENT '文档类型：1-文章，2-评论',
-  `document_user_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '发布该文档的用户 ID',
+  `document_user_id` BIGINT NOT NULL DEFAULT '0' COMMENT '发布该文档的用户 ID',
   `collection_stat` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '收藏状态：0-未收藏，1-已收藏，2-取消收藏',
   `read_stat` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '阅读状态：0-未读，1-已读',
   `comment_stat` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '评论状态：0-未评论，1-已评论，2-删除评论',

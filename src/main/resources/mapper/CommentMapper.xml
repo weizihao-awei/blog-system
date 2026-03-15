@@ -12,11 +12,7 @@
         <result column="create_time" property="createTime"/>
     </resultMap>
     
-    <resultMap id="CommentWithUserResultMap" type="com.ykw.blog_system.entity.Comment" extends="BaseResultMap">
-        <result column="username" property="username"/>
-        <result column="user_avatar" property="userAvatar"/>
-        <result column="reply_to_username" property="replyToUsername"/>
-    </resultMap>
+
     
     <sql id="Base_Column_List">
         c.id, c.article_id, c.parent_id, c.user_id, c.content, c.status, c.create_time
@@ -26,15 +22,10 @@
         SELECT <include refid="Base_Column_List"/> FROM comment c WHERE c.id = #{id}
     </select>
     
-    <select id="selectByArticleId" resultMap="CommentWithUserResultMap">
+    <select id="selectByArticleId" resultMap="BaseResultMap">
         SELECT 
-            <include refid="Base_Column_List"/>,
-            u.nickname as username, u.avatar as user_avatar,
-            pu.nickname as reply_to_username
+            <include refid="Base_Column_List"/>
         FROM comment c
-        LEFT JOIN user u ON c.user_id = u.id
-        LEFT JOIN comment pc ON c.parent_id = pc.id
-        LEFT JOIN user pu ON pc.user_id = pu.id
         WHERE c.article_id = #{articleId}
         <if test="status != null">
             AND c.status = #{status}
@@ -42,12 +33,10 @@
         ORDER BY c.create_time DESC
     </select>
     
-    <select id="selectByParentId" resultMap="CommentWithUserResultMap">
+    <select id="selectByParentId" resultMap="BaseResultMap">
         SELECT 
-            <include refid="Base_Column_List"/>,
-            u.nickname as username, u.avatar as user_avatar
+            <include refid="Base_Column_List"/>
         FROM comment c
-        LEFT JOIN user u ON c.user_id = u.id
         WHERE c.parent_id = #{parentId}
         ORDER BY c.create_time ASC
     </select>
@@ -87,7 +76,7 @@
         SELECT COUNT(*) FROM comment WHERE article_id = #{articleId} AND status = 1
     </select>
     
-    <select id="selectPage" resultMap="CommentWithUserResultMap">
+    <select id="selectPage" resultMap="BaseResultMap">
         SELECT 
             <include refid="Base_Column_List"/>
         FROM comment c
