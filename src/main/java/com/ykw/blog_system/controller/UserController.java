@@ -39,33 +39,33 @@ public class UserController {
         return userService.updateUserInfo(user);
     }
     
-    /**
-     * 获取用户列表（管理员）
-     */
-    @GetMapping("/list")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResultVO<PageVO<User>> getUserList(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) String keyword) {
-        return userService.getUserList(pageNum, pageSize, keyword);
-    }
-    
-    /**
-     * 更新用户状态（管理员）
-     */
-    @PutMapping("/{userId}/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResultVO<Void> updateUserStatus(@PathVariable Long userId, @PathVariable Integer status) {
-        return userService.updateUserStatus(userId, status);
-    }
-    
-    /**
-     * 删除用户（管理员）
-     */
-    @DeleteMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResultVO<Void> deleteUser(@PathVariable Long userId) {
-        return userService.deleteUser(userId);
-    }
+//    /**
+//     * 获取用户列表（管理员）
+//     */
+//    @GetMapping("/list")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResultVO<PageVO<User>> getUserList(
+//            @RequestParam(defaultValue = "1") Integer pageNum,
+//            @RequestParam(defaultValue = "10") Integer pageSize,
+//            @RequestParam(required = false) String keyword) {
+//        return userService.getUserList(pageNum, pageSize, keyword);
+//    }
+//
+//    /**
+//     * 更新用户状态（管理员）
+//     */
+//    @PutMapping("/{userId}/status/{status}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResultVO<Void> updateUserStatus(@PathVariable Long userId, @PathVariable Integer status) {
+//        return userService.updateUserStatus(userId, status);
+//    }
+//
+//    /**
+//     * 删除用户（管理员）
+//     */
+//    @DeleteMapping("/{userId}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResultVO<Void> deleteUser(@PathVariable Long userId) {
+//        return userService.deleteUser(userId);
+//    }
 }
