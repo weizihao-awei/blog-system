@@ -12,6 +12,7 @@ import com.ykw.blog_system.utils.SecurityUtil;
 import com.ykw.blog_system.vo.CommentVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
+import com.ykw.blog_system.vo.SubCommentVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public ResultVO<List<CommentVO>> getCommentList(Long articleId) {
         List<Comment> comments = commentMapper.selectByArticleId(articleId, 1);
-        
+
         // 构建评论树
         List<CommentVO> commentVOList = buildCommentTree(comments);
         
@@ -47,41 +48,65 @@ public class CommentServiceImpl implements CommentService {
     }
     
     /**
-     * 构建评论树
+     * 构建评论树（一级评论 + 子评论列表）
      */
     private List<CommentVO> buildCommentTree(List<Comment> comments) {
         List<CommentVO> rootComments = new ArrayList<>();
         
+        // 先所有一级评论
         for (Comment comment : comments) {
             if (comment.getParentId() == null) {
                 CommentVO commentVO = convertToVO(comment);
-                commentVO.setChildren(findChildren(comment.getId(), comments));
+                //todo:依次装载效率很低，后面应该改为连表查询
+                User user = userMapper.selectById(comment.getUserId());
+                commentVO.setUsername(user.getUsername());
+                commentVO.setUserAvatar(user.getAvatar());
+
+                // 查找该一级评论下的所有子评论
+                List<SubCommentVO> subComments = findSubComments(commentVO, comments);
+                commentVO.setChildren(subComments);
+
                 rootComments.add(commentVO);
             }
         }
+
+        // 对一级评论进行排序
+        rootComments.sort(CommentVO::compareTo);
         
         return rootComments;
     }
     
     /**
-     * 查找子评论
+     * 查找子评论（返回 SubCommentVO 列表）
      */
-    private List<CommentVO> findChildren(Long parentId, List<Comment> allComments) {
-        List<CommentVO> children = new ArrayList<>();
+    private List<SubCommentVO> findSubComments(CommentVO parentCommentVO, List<Comment> allComments) {
+        List<SubCommentVO> children = new ArrayList<>();
         
         for (Comment comment : allComments) {
-            if (parentId.equals(comment.getParentId())) {
-                CommentVO commentVO = convertToVO(comment);
-                commentVO.setChildren(findChildren(comment.getId(), allComments));
-                children.add(commentVO);
+            if (parentCommentVO.getId().equals(comment.getParentId())) {
+                SubCommentVO subCommentVO = new SubCommentVO();
+                BeanUtils.copyProperties(comment, subCommentVO);
+                //todo：这种依次效率很低
+                User user = userMapper.selectById(comment.getUserId());
+                subCommentVO.setUsername(user.getUsername());
+                subCommentVO.setUserAvatar(user.getAvatar());
+                children.add(subCommentVO);
+
+                //装载父级评论信息
+                subCommentVO.setParentId(parentCommentVO.getId());
+                subCommentVO.setReplyToUserId(parentCommentVO.getUserId());
+                subCommentVO.setReplyToUsername(user.getUsername());
+                subCommentVO.setReplyToUserAvatar(user.getAvatar());
             }
         }
+        //进行排序
+        children.sort(SubCommentVO::compareTo);
         
         return children.isEmpty() ? null : children;
     }
     
     /**
-     * 转换为VO
+     * 转换为 VO（一级评论）
      */
     private CommentVO convertToVO(Comment comment) {
         CommentVO commentVO = new CommentVO();

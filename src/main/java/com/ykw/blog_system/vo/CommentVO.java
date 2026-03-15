@@ -1,33 +1,22 @@
 package com.ykw.blog_system.vo;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * 评论VO
  */
 @Data
-public class CommentVO {
-    
-    private Long id;
-    
-    private Long articleId;
-    
-    private Long parentId;
-    
-    private Long userId;
-    
-    private String username;
-    
-    private String userAvatar;
-    
-    private String content;
-    
-    private String replyToUsername;
-    
-    private LocalDateTime createTime;
-    
-    private List<CommentVO> children;
+public class CommentVO extends BaseCommentVO{
+
+
+    private List<SubCommentVO> children;
+
+    //排序
+    @Override
+    public int compareTo(@NotNull BaseCommentVO o) {
+        return o.getCreateTime().compareTo(this.getCreateTime());
+    }
 }
