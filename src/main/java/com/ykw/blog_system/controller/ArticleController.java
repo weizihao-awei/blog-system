@@ -3,7 +3,7 @@ package com.ykw.blog_system.controller;
 import com.ykw.blog_system.dto.ArticleDTO;
 import com.ykw.blog_system.dto.ArticleOperationDTO;
 import com.ykw.blog_system.dto.ArticleQueryDTO;
-import com.ykw.blog_system.entity.Article;
+
 import com.ykw.blog_system.service.ArticleService;
 import com.ykw.blog_system.utils.SecurityUtil;
 import com.ykw.blog_system.vo.ArticleVO;
@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 /**
  * 文章控制器
