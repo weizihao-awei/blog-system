@@ -8,7 +8,6 @@ import com.ykw.blog_system.service.UserService;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,9 +20,6 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private UserMapper userMapper;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;
     
     @Override
     public ResultVO<User> getCurrentUserInfo(Long userId) {
@@ -51,23 +47,6 @@ public class UserServiceImpl implements UserService {
         }
         
         userMapper.updateById(user);
-        return ResultVO.success();
-    }
-    
-    @Override
-    public ResultVO<Void> updatePassword(Long userId, String oldPassword, String newPassword) {
-        User user = userMapper.selectById(userId);
-        if (user == null) {
-            return ResultVO.error("用户不存在");
-        }
-        
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            return ResultVO.error("原密码错误");
-        }
-        
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userMapper.updateById(user);
-        
         return ResultVO.success();
     }
     

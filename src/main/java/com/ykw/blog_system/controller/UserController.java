@@ -40,17 +40,6 @@ public class UserController {
     }
     
     /**
-     * 修改密码
-     */
-    @PutMapping("/password")
-    public ResultVO<Void> updatePassword(@RequestBody Map<String, String> params) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        String oldPassword = params.get("oldPassword");
-        String newPassword = params.get("newPassword");
-        return userService.updatePassword(userId, oldPassword, newPassword);
-    }
-    
-    /**
      * 获取用户列表（管理员）
      */
     @GetMapping("/list")

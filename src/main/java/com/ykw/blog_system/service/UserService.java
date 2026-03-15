@@ -15,8 +15,6 @@ public interface UserService {
     
     ResultVO<Void> updateUserInfo(User user);
     
-    ResultVO<Void> updatePassword(Long userId, String oldPassword, String newPassword);
-    
     ResultVO<PageVO<User>> getUserList(Integer pageNum, Integer pageSize, String keyword);
     
     ResultVO<Void> updateUserStatus(Long userId, Integer status);
