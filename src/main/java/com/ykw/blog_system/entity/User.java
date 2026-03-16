@@ -21,9 +21,11 @@ public class User {
     
     private String nickname;
     
-    private String email;
+
     
     private String avatar;
+
+    private String email;
     
     /**
      * 性别：0-未知，1-男，2-女

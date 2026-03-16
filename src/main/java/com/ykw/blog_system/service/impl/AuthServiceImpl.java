@@ -14,6 +14,7 @@ import com.ykw.blog_system.utils.VerificationCodeCache;
 import com.ykw.blog_system.vo.LoginVO;
 import com.ykw.blog_system.vo.ResultVO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -59,13 +60,11 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
         
         LoginVO loginVO = new LoginVO();
+        // 使用 BeanUtils 复制属性
+        BeanUtils.copyProperties(user, loginVO);
+        // 设置 token 相关信息
         loginVO.setToken(token);
         loginVO.setTokenType("Bearer");
-        loginVO.setUserId(user.getId());
-        loginVO.setUsername(user.getUsername());
-        loginVO.setNickname(user.getNickname());
-        loginVO.setAvatar(user.getAvatar());
-        loginVO.setRole(user.getRole());
         
         return ResultVO.success("登录成功", loginVO);
     }
