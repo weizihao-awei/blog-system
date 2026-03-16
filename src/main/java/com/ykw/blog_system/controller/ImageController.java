@@ -1,15 +1,11 @@
 package com.ykw.blog_system.controller;
-
-import com.ykw.blog_system.utils.SecurityUtil;
 import com.ykw.blog_system.vo.ImageVO;
 import com.ykw.blog_system.vo.ResultVO;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

@@ -2,6 +2,8 @@ package com.ykw.blog_system.utils;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +16,9 @@ import java.util.Date;
  */
 @Component
 public class JwtUtil {
+
+    //添加日志对象
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
     
     @Value("${jwt.secret}")
     private String secret;
@@ -78,22 +83,22 @@ public class JwtUtil {
     }
     
     /**
-     * 验证Token是否有效
+     * 验证 Token 是否有效
      */
     public boolean validateToken(String token) {
         try {
             parseToken(token);
             return true;
         } catch (ExpiredJwtException e) {
-            System.out.println("Token已过期");
+            logger.warn("Token 已过期", e);
         } catch (UnsupportedJwtException e) {
-            System.out.println("不支持的Token");
+            logger.warn("不支持的 Token", e);
         } catch (MalformedJwtException e) {
-            System.out.println("Token格式错误");
+            logger.warn("Token 格式错误", e);
         } catch (SignatureException e) {
-            System.out.println("Token签名验证失败");
+            logger.warn("Token 签名验证失败", e);
         } catch (IllegalArgumentException e) {
-            System.out.println("Token为空或非法");
+            logger.warn("Token 为空或非法", e);
         }
         return false;
     }
