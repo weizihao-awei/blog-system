@@ -477,47 +477,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
 
-    @Override
-    public ResultVO<PageVO<ArticleVO>> getMyArticles(Long userId, Integer pageNum, Integer pageSize, Integer status) {
-        Page<Article> page = new Page<>(pageNum, pageSize);
-        
-        LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Article::getAuthorId, userId);
-        if (status != null) {
-            wrapper.eq(Article::getStatus, status);
-        }
-        wrapper.orderByDesc(Article::getCreateTime);
-        
-        Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
-        List<Article> list = pageResult.getRecords();
-        
-        // 转换为 ArticleVO 并加载标签
-        List<ArticleVO> voList = convertToVOList(list);
-        
-        PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(), pageNum, pageSize);
-        return ResultVO.success(pageVO);
-    }
-    
-    @Override
-    public ResultVO<PageVO<ArticleVO>> getMyCollects(Long userId, Integer pageNum, Integer pageSize) {
-        Page<Article> page = new Page<>(pageNum, pageSize);
-        
-        LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
-        wrapper.inSql(Article::getId, 
-            "SELECT document_id FROM user_foot WHERE user_id = " + userId + 
-            " AND document_type = 1 AND collection_stat = 1");
-        wrapper.eq(Article::getStatus, 1);
-        wrapper.orderByDesc(Article::getUpdateTime);
-        
-        Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
-        List<Article> list = pageResult.getRecords();
-        
-        // 转换为 ArticleVO 并加载标签
-        List<ArticleVO> voList = convertToVOList(list);
-        
-        PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(), pageNum, pageSize);
-        return ResultVO.success(pageVO);
-    }
+
 
 
 
