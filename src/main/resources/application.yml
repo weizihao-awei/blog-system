@@ -49,5 +49,5 @@ logging:
 
 file:
   upload:
-    path: D:/uploads/
+    path: uploads/
 

@@ -41,3 +41,4 @@ build/
 /mvnw
 /.mvn/wrapper/maven-wrapper.properties
 /.gitattributes
+/uploads/
