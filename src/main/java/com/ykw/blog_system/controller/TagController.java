@@ -46,41 +46,41 @@ public class TagController {
         return tagService.getTagDetail(tagId);
     }
     
-    /**
-     * 创建标签（管理员）
-     */
-    @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResultVO<Long> createTag(@Valid @RequestBody TagDTO tagDTO) {
-        return tagService.createTag(tagDTO);
-    }
-    
-    /**
-     * 更新标签（管理员）
-     */
-    @PutMapping("/update")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResultVO<Void> updateTag(@Valid @RequestBody TagDTO tagDTO) {
-        return tagService.updateTag(tagDTO);
-    }
-    
-    /**
-     * 删除标签（管理员）
-     */
-    @DeleteMapping("/delete/{tagId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResultVO<Void> deleteTag(@PathVariable Long tagId) {
-        return tagService.deleteTag(tagId);
-    }
-    
-    /**
-     * 获取标签列表（管理员分页）
-     */
-    @GetMapping("/admin-list")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResultVO<PageVO<Tag>> getAdminTagList(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        return tagService.getAdminTagList(pageNum, pageSize);
-    }
+//    /**
+//     * 创建标签（管理员）
+//     */
+//    @PostMapping("/create")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResultVO<Long> createTag(@Valid @RequestBody TagDTO tagDTO) {
+//        return tagService.createTag(tagDTO);
+//    }
+//
+//    /**
+//     * 更新标签（管理员）
+//     */
+//    @PutMapping("/update")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResultVO<Void> updateTag(@Valid @RequestBody TagDTO tagDTO) {
+//        return tagService.updateTag(tagDTO);
+//    }
+//
+//    /**
+//     * 删除标签（管理员）
+//     */
+//    @DeleteMapping("/delete/{tagId}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResultVO<Void> deleteTag(@PathVariable Long tagId) {
+//        return tagService.deleteTag(tagId);
+//    }
+//
+//    /**
+//     * 获取标签列表（管理员分页）
+//     */
+//    @GetMapping("/admin-list")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResultVO<PageVO<Tag>> getAdminTagList(
+//            @RequestParam(defaultValue = "1") Integer pageNum,
+//            @RequestParam(defaultValue = "10") Integer pageSize) {
+//        return tagService.getAdminTagList(pageNum, pageSize);
+//    }
 }

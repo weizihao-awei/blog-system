@@ -37,8 +37,4 @@ public interface ArticleService {
     ResultVO<PageVO<ArticleVO>> getLatestArticles(ArticleQueryDTO queryDTO);
     
     ResultVO<PageVO<ArticleVO>> getRecommendArticles(Long userId, ArticleQueryDTO queryDTO);
-    
-    ResultVO<PageVO<ArticleVO>> getMyArticles(Long userId, Integer pageNum, Integer pageSize, Integer status);
-    
-    ResultVO<PageVO<ArticleVO>> getMyCollects(Long userId, Integer pageNum, Integer pageSize);
 }

@@ -117,28 +117,4 @@ public class ArticleController {
         Long userId = SecurityUtil.getCurrentUserId();
         return articleService.getRecommendArticles(userId, queryDTO);
     }
-    
-    /**
-     * 获取我的文章列表
-     */
-    @GetMapping("/my")
-    public ResultVO<PageVO<ArticleVO>> getMyArticles(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) Integer status) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        return articleService.getMyArticles(userId, pageNum, pageSize, status);
-    }
-    
-    /**
-     * 获取我的收藏列表
-     */
-    @GetMapping("/my-collects")
-    public ResultVO<PageVO<ArticleVO>> getMyCollects(
-
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        return articleService.getMyCollects(userId, pageNum, pageSize);
-    }
 }
