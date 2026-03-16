@@ -117,9 +117,7 @@ public class ImageController {
         }
         
         try {
-            if (oldUri != null && !oldUri.isEmpty()) {
-                deleteImageByUri(oldUri);
-            }
+
             
             String originalFilename = file.getOriginalFilename();
             String extension = getFileExtension(originalFilename);
@@ -132,12 +130,19 @@ public class ImageController {
             
             Path filePath = categoryPath.resolve(newFilename);
             file.transferTo(filePath.toFile());
+
+
+
             
             String imageUri = "/api/image/" + category + "/" + newFilename;
             
             ImageVO imageVO = new ImageVO();
             imageVO.setUri(imageUri);
             imageVO.setFilename(newFilename);
+
+            if (oldUri != null && !oldUri.isEmpty()) {
+                deleteImageByUri(oldUri);
+            }
 
             
             return ResultVO.success("更新成功", imageVO);
