@@ -1,5 +1,6 @@
 package com.ykw.blog_system.utils;
 
+import com.ykw.blog_system.enums.ResultCodeEnum;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
@@ -85,24 +86,18 @@ public class JwtUtil {
     /**
      * 验证 Token 是否有效
      */
-    public boolean validateToken(String token) {
+    public ResultCodeEnum validateToken(String token) {
         try {
             parseToken(token);
-            return true;
+            return ResultCodeEnum.SUCCESS;
         } catch (ExpiredJwtException e) {
-            logger.warn("Token 已过期", e);
-        } catch (UnsupportedJwtException e) {
-            logger.warn("不支持的 Token", e);
-        } catch (MalformedJwtException e) {
-            logger.warn("Token 格式错误", e);
-        } catch (SignatureException e) {
-            logger.warn("Token 签名验证失败", e);
-        } catch (IllegalArgumentException e) {
-            logger.warn("Token 为空或非法", e);
+            logger.warn("JWT Token 已过期：{}", e.getMessage());
+            return ResultCodeEnum.TOKEN_EXPIRED;
+        } catch (UnsupportedJwtException | MalformedJwtException | SignatureException | IllegalArgumentException e) {
+            logger.warn("JWT Token 无效：{}", e.getMessage());
+            return ResultCodeEnum.TOKEN_INVALID;
         }
-        return false;
     }
-    
     /**
      * 判断Token是否过期
      */
