@@ -41,7 +41,7 @@ mybatis:
 
 jwt:
   secret: blogSystemSecretKeyForJwtTokenGenerationAndValidation2024
-  expiration: 86400000
+  expiration: 3
 
 logging:
   level:

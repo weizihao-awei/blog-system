@@ -18,7 +18,10 @@ public enum ResultCodeEnum {
 
     // ========== 客户端错误状态码 ==========
     //token过期
-    TOKEN_EXPIRED(401, "token已过期");
+    TOKEN_EXPIRED(401, "token已过期"),
+
+    //token无效
+    TOKEN_INVALID(402, "token无效");
 
     private final Integer code;
     private final String message;

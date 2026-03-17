@@ -1,5 +1,6 @@
 package com.ykw.blog_system.exception;
 
+import com.ykw.blog_system.enums.ResultCodeEnum;
 import com.ykw.blog_system.vo.ResultVO;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -14,7 +15,17 @@ import java.util.stream.Collectors;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    
+
+    // 捕获认证异常
+    @ExceptionHandler(AuthException.class)
+    public ResultVO<Void> handleAuthException(AuthException e) {
+        //通过e.getCode()获取枚举
+        ResultCodeEnum resultCode = ResultCodeEnum.fromCode(e.getCode());
+        return ResultVO.error(resultCode);
+    }
+
+
+
     /**
      * 处理参数校验异常
      */
