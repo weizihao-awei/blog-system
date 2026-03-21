@@ -93,15 +93,22 @@ public class UserRelationServiceImpl implements UserRelationService {
 
 
     }
+
+    /**
+     * 获取粉丝列表
+     *
+     * @param queryDTO 粉丝查询参数
+     * @return 粉丝用户分页数据
+     */
     
     @Override
     public ResultVO<PageVO<User>> getFollowersList(UserFootQueryDTO queryDTO) {
-        Long currentUserId = SecurityUtil.getCurrentUserId();
+        Long targetUserId = queryDTO.getUserId();
         
         Page<UserRelation> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         LambdaQueryWrapper<UserRelation> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserRelation::getUserId, currentUserId)
-                .eq(UserRelation::getFollowState, 1)
+        wrapper.eq(UserRelation::getUserId, targetUserId)
+                .eq(UserRelation::getFollowState, FollowStateEnum.FOLLOWED.getCode())
                 .orderByDesc(UserRelation::getCreateTime);
         Page<UserRelation> relationPage = userRelationMapper.selectPage(page, wrapper);
         
@@ -119,15 +126,20 @@ public class UserRelationServiceImpl implements UserRelationService {
                 queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(ResultCodeEnum.SUCCESS, pageVO);
     }
-    
+    /**
+     * 获取关注列表
+     *
+     * @param queryDTO 关注查询参数
+     * @return 关注用户分页数据
+     */
     @Override
     public ResultVO<PageVO<User>> getFollowingList(UserFootQueryDTO queryDTO) {
-        Long currentUserId = SecurityUtil.getCurrentUserId();
+        Long targetUserId = queryDTO.getUserId();
         
         Page<UserRelation> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         LambdaQueryWrapper<UserRelation> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserRelation::getFollowUserId, currentUserId)
-                .eq(UserRelation::getFollowState, 1)
+        wrapper.eq(UserRelation::getFollowUserId, targetUserId)
+                .eq(UserRelation::getFollowState,  FollowStateEnum.FOLLOWED.getCode())
                 .orderByDesc(UserRelation::getCreateTime);
         Page<UserRelation> relationPage = userRelationMapper.selectPage(page, wrapper);
         
@@ -146,22 +158,32 @@ public class UserRelationServiceImpl implements UserRelationService {
         return ResultVO.success(ResultCodeEnum.SUCCESS, pageVO);
     }
     
+    /**
+     * 获取指定用户的粉丝数量
+     *
+     * @param userId 用户ID
+     * @return 粉丝数量
+     */
     @Override
-    public ResultVO<Long> getFollowersCount() {
-        Long currentUserId = SecurityUtil.getCurrentUserId();
+    public ResultVO<Long> getFollowersCount(Long userId) {
         LambdaQueryWrapper<UserRelation> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserRelation::getUserId, currentUserId)
-                .eq(UserRelation::getFollowState, 1);
+        wrapper.eq(UserRelation::getUserId, userId)
+                .eq(UserRelation::getFollowState, FollowStateEnum.FOLLOWED.getCode());
         Long count = userRelationMapper.selectCount(wrapper);
         return ResultVO.success(ResultCodeEnum.SUCCESS, count);
     }
-    
+
+    /**
+     * 获取指定用户的关注数量
+     *
+     * @param userId 用户ID
+     * @return 关注数量
+     */
     @Override
-    public ResultVO<Long> getFollowingCount() {
-        Long currentUserId = SecurityUtil.getCurrentUserId();
+    public ResultVO<Long> getFollowingCount(Long userId) {
         LambdaQueryWrapper<UserRelation> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserRelation::getFollowUserId, currentUserId)
-                .eq(UserRelation::getFollowState, 1);
+        wrapper.eq(UserRelation::getFollowUserId, userId)
+                .eq(UserRelation::getFollowState, FollowStateEnum.FOLLOWED.getCode());
         Long count = userRelationMapper.selectCount(wrapper);
         return ResultVO.success(ResultCodeEnum.SUCCESS, count);
     }

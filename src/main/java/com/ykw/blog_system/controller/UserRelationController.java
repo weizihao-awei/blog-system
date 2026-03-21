@@ -48,19 +48,21 @@ public class UserRelationController {
     
     /**
      * 获取粉丝数量
+     * @param userId 用户ID
      * @return 粉丝总数
      */
     @GetMapping("/followers/count")
-    public ResultVO<Long> getFollowersCount() {
-        return userRelationService.getFollowersCount();
+    public ResultVO<Long> getFollowersCount(@RequestParam Long userId) {
+        return userRelationService.getFollowersCount(userId);
     }
     
     /**
      * 获取关注数量
+     * @param userId 用户ID
      * @return 关注总数
      */
     @GetMapping("/following/count")
-    public ResultVO<Long> getFollowingCount() {
-        return userRelationService.getFollowingCount();
+    public ResultVO<Long> getFollowingCount(@RequestParam Long userId) {
+        return userRelationService.getFollowingCount(userId);
     }
 }

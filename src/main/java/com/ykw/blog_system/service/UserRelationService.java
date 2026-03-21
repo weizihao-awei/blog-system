@@ -14,7 +14,7 @@ public interface UserRelationService {
     
     ResultVO<PageVO<User>> getFollowingList(UserFootQueryDTO queryDTO);
     
-    ResultVO<Long> getFollowersCount();
+    ResultVO<Long> getFollowersCount(Long userId);
     
-    ResultVO<Long> getFollowingCount();
+    ResultVO<Long> getFollowingCount(Long userId);
 }

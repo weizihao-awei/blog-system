@@ -12,6 +12,11 @@ import lombok.Data;
 public class UserFootQueryDTO {
     
     /**
+     * 用户ID（用于查询指定用户的关注和粉丝信息）
+     */
+    private Long userId;
+    
+    /**
      * 页码
      */
     private Integer pageNum = 1;
