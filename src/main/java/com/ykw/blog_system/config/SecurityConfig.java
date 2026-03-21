@@ -81,9 +81,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/category/detail/**").permitAll()
                 .requestMatchers("/api/comment/list/**").permitAll()
                 .requestMatchers("/api/statistics").permitAll()
-                .requestMatchers("/uploads/**").permitAll()
-                // 放行图片访问接口（静态资源）
+                // 放行图片访问接口（静态资源）- 必须在 /api/** 之前
                 .requestMatchers("/api/image/**").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
+                // 其他 API 接口需要认证
                 .requestMatchers("/api/**").authenticated()
                 // 其他接口需要认证
                 .anyRequest().authenticated()
