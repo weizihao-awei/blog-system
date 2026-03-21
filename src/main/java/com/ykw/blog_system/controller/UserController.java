@@ -1,11 +1,13 @@
 package com.ykw.blog_system.controller;
 
+import com.ykw.blog_system.dto.AuthorInfoQueryDTO;
 import com.ykw.blog_system.dto.UserFootQueryDTO;
 import com.ykw.blog_system.entity.*;
 import com.ykw.blog_system.mapper.*;
 import com.ykw.blog_system.service.UserService;
 import com.ykw.blog_system.utils.SecurityUtil;
 import com.ykw.blog_system.vo.ArticleVO;
+import com.ykw.blog_system.vo.AuthorInfoVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
 import com.ykw.blog_system.vo.TagVO;
@@ -81,6 +83,16 @@ public class UserController {
     public ResultVO<PageVO<ArticleVO>> getUserPublishedArticles(@RequestBody UserFootQueryDTO queryDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
         return userService.getUserPublishedArticlesPage(userId, queryDTO);
+    }
+
+    /**
+     * 获取作者信息
+     * @param queryDTO 查询参数
+     * @return 作者信息
+     */
+    @PostMapping("/author/info")
+    public ResultVO<AuthorInfoVO> getAuthorInfo(@RequestBody AuthorInfoQueryDTO queryDTO) {
+        return userService.getAuthorInfo(queryDTO.getUserId());
     }
 
 //    /**

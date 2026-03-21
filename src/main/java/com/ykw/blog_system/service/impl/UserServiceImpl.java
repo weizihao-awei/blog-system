@@ -4,11 +4,15 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.dto.UserFootQueryDTO;
 import com.ykw.blog_system.entity.*;
+import com.ykw.blog_system.enums.FollowStateEnum;
 import com.ykw.blog_system.enums.OrderEnum;
+import com.ykw.blog_system.enums.ResultCodeEnum;
 import com.ykw.blog_system.mapper.*;
+import com.ykw.blog_system.service.UserRelationService;
 import com.ykw.blog_system.service.UserService;
 import com.ykw.blog_system.utils.SecurityUtil;
 import com.ykw.blog_system.vo.ArticleVO;
+import com.ykw.blog_system.vo.AuthorInfoVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
 import com.ykw.blog_system.vo.TagVO;
@@ -40,6 +44,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private CategoryMapper categoryMapper;
+
+    @Autowired
+    private UserRelationMapper userRelationMapper;
 
 
 
@@ -204,6 +211,64 @@ public class UserServiceImpl implements UserService {
         PageVO<ArticleVO> pageVO = new PageVO<>(articleVOList, pageResult.getTotal(), 
                 queryDTO.getPageNum(), queryDTO.getPageSize());
         return ResultVO.success(pageVO);
+    }
+
+    @Override
+    public ResultVO<AuthorInfoVO> getAuthorInfo(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return ResultVO.error(ResultCodeEnum.PARAM_ERROR);
+        }
+
+        AuthorInfoVO authorInfoVO = new AuthorInfoVO();
+        authorInfoVO.setId(user.getId());
+        authorInfoVO.setNickname(user.getNickname());
+        authorInfoVO.setAvatar(user.getAvatar());
+        authorInfoVO.setGender(user.getGender());
+        authorInfoVO.setIntro(user.getIntro());
+        authorInfoVO.setSignature(user.getSignature());
+
+        // 使用 Mapper 直接查询粉丝数
+        LambdaQueryWrapper<UserRelation> followerWrapper = new LambdaQueryWrapper<>();
+        followerWrapper.eq(UserRelation::getUserId, userId)
+                .eq(UserRelation::getFollowState, FollowStateEnum.FOLLOWED.getCode());
+        Long followersCount = userRelationMapper.selectCount(followerWrapper);
+        authorInfoVO.setFollowersCount(followersCount != null ? followersCount : 0L);
+
+        // 使用 Mapper 直接查询关注数
+        LambdaQueryWrapper<UserRelation> followingWrapper = new LambdaQueryWrapper<>();
+        followingWrapper.eq(UserRelation::getFollowUserId, userId)
+                .eq(UserRelation::getFollowState, FollowStateEnum.FOLLOWED.getCode());
+        Long followingCount = userRelationMapper.selectCount(followingWrapper);
+        authorInfoVO.setFollowingCount(followingCount != null ? followingCount : 0L);
+
+        // 查询用户发布的文章列表
+        LambdaQueryWrapper<Article> articleWrapper = new LambdaQueryWrapper<>();
+        articleWrapper.eq(Article::getAuthorId, userId)
+                .eq(Article::getStatus, 1);
+        List<Article> articles = articleMapper.selectList(articleWrapper);
+        
+        // 使用集合大小作为文章数量，避免额外查询
+        Long articlesCount = (long) articles.size();
+        authorInfoVO.setArticlesCount(articlesCount);
+
+        // 计算总浏览量、总点赞数、总收藏数
+        Long totalViews = articles.stream()
+                .mapToLong(article -> article.getViewCount() != null ? article.getViewCount() : 0L)
+                .sum();
+        authorInfoVO.setTotalViews(totalViews);
+
+        Long totalLikes = articles.stream()
+                .mapToLong(article -> article.getLikeCount() != null ? article.getLikeCount() : 0L)
+                .sum();
+        authorInfoVO.setTotalLikes(totalLikes);
+
+        Long totalCollections = articles.stream()
+                .mapToLong(article -> article.getCollectionCount() != null ? article.getCollectionCount() : 0L)
+                .sum();
+        authorInfoVO.setTotalCollections(totalCollections);
+
+        return ResultVO.success(ResultCodeEnum.SUCCESS, authorInfoVO);
     }
 
     /**
