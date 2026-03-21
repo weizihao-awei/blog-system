@@ -21,7 +21,18 @@ public enum ResultCodeEnum {
     TOKEN_EXPIRED(401, "token已过期"),
 
     //token无效
-    TOKEN_INVALID(402, "token无效");
+    TOKEN_INVALID(402, "token无效"),
+
+
+
+    //关注相关错误
+    CANNOT_FOLLOW_SELF(404, "不能关注自己"),
+
+    ALREADY_FOLLOWED(405, "已关注该用户"),
+
+    NOT_FOLLOWED_YET(406, "未关注该用户"),
+
+    PARAM_ERROR(407, "参数错误");
 
     private final Integer code;
     private final String message;
