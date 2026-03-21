@@ -67,7 +67,7 @@ public class CommentServiceImpl implements CommentService {
                 CommentVO commentVO = convertToVO(comment);
                 //todo:依次装载效率很低，后面应该改为连表查询
                 User user = userMapper.selectById(comment.getUserId());
-                commentVO.setUsername(user.getUsername());
+                commentVO.setUsername(user.getNickname());
                 commentVO.setUserAvatar(user.getAvatar());
 
                 // 查找该一级评论下的所有子评论
