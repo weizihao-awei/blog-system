@@ -2,13 +2,10 @@ package com.ykw.blog_system.service;
 
 import com.ykw.blog_system.dto.UserFootQueryDTO;
 import com.ykw.blog_system.entity.User;
-import com.ykw.blog_system.entity.UserFoot;
 import com.ykw.blog_system.vo.ArticleVO;
 import com.ykw.blog_system.vo.AuthorInfoVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
-
-import java.util.List;
 
 /**
  * 用户服务接口
@@ -58,7 +55,7 @@ public interface UserService {
     /**
      * 分页查询用户发布的文章
      */
-    ResultVO<PageVO<ArticleVO>> getUserPublishedArticlesPage(Long userId, UserFootQueryDTO queryDTO);
+    ResultVO<PageVO<ArticleVO>> getUserPublishedArticlesPage( UserFootQueryDTO queryDTO);
     
     /**
      * 获取作者信息（包含统计数据）

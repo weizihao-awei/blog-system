@@ -8,7 +8,6 @@ import com.ykw.blog_system.enums.FollowStateEnum;
 import com.ykw.blog_system.enums.OrderEnum;
 import com.ykw.blog_system.enums.ResultCodeEnum;
 import com.ykw.blog_system.mapper.*;
-import com.ykw.blog_system.service.UserRelationService;
 import com.ykw.blog_system.service.UserService;
 import com.ykw.blog_system.utils.SecurityUtil;
 import com.ykw.blog_system.vo.ArticleVO;
@@ -191,11 +190,11 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
-    public ResultVO<PageVO<ArticleVO>> getUserPublishedArticlesPage(Long userId, UserFootQueryDTO queryDTO) {
+    public ResultVO<PageVO<ArticleVO>> getUserPublishedArticlesPage(UserFootQueryDTO queryDTO) {
         // 分页查询文章，直接按作者 ID 查询
         Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Article::getAuthorId, userId)
+        wrapper.eq(Article::getAuthorId, queryDTO.getUserId())
                 .eq(Article::getStatus, 1); // 只查询已发布的文章
         
         OrderEnum order = queryDTO.getOrder() != null ? queryDTO.getOrder() : OrderEnum.DESC;

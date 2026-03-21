@@ -81,8 +81,8 @@ public class UserController {
      */
     @PostMapping("/articles/published")
     public ResultVO<PageVO<ArticleVO>> getUserPublishedArticles(@RequestBody UserFootQueryDTO queryDTO) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        return userService.getUserPublishedArticlesPage(userId, queryDTO);
+
+        return userService.getUserPublishedArticlesPage(queryDTO);
     }
 
     /**
