@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ykw.blog_system.Config.MessageWebSocketHandler;
 import com.ykw.blog_system.dto.ChatIdQueryDTO;
 import com.ykw.blog_system.dto.ChatListQueryDTO;
+import com.ykw.blog_system.dto.GetOrCreateChatDTO;
 import com.ykw.blog_system.dto.MessageListQueryDTO;
 import com.ykw.blog_system.dto.SendMessageDTO;
 import com.ykw.blog_system.entity.Message;
@@ -195,6 +196,7 @@ public class MessageServiceImpl implements MessageService {
         Long senderId = SecurityUtil.getCurrentUserId();
         Long receiverId = sendMessageDTO.getReceiverId();
         String content = sendMessageDTO.getContent();
+        Long chatId = sendMessageDTO.getChatId();
 
         // 不能发送给自己
         if (receiverId.equals(senderId)) {
@@ -206,21 +208,29 @@ public class MessageServiceImpl implements MessageService {
             return ResultVO.error(ResultCodeEnum.MESSAGE_RECEIVER_NOT_FOUND);
         }
 
-        // 获取聊天会话
-        Long userId1 = Math.min(senderId, receiverId);
-        Long userId2 = Math.max(senderId, receiverId);
-        LambdaQueryWrapper<MessageChat> chatQueryWrapper = new LambdaQueryWrapper<>();
-        chatQueryWrapper.eq(MessageChat::getUserId1, userId1)
-                .eq(MessageChat::getUserId2, userId2);
-        MessageChat chat = messageChatMapper.selectOne(chatQueryWrapper);
-        // 如果不存在则创建
-        if (chat == null) {
-            chat = new MessageChat();
-            chat.setUserId1(userId1);
-            chat.setUserId2(userId2);
-            messageChatMapper.insert(chat);
+        MessageChat chat;
+        if (chatId != null) {
+            chat = messageChatMapper.selectById(chatId);
+            if (chat == null) {
+                return ResultVO.error("会话不存在");
+            }
+            if (!chat.getUserId1().equals(senderId) && !chat.getUserId2().equals(senderId)) {
+                return ResultVO.error("无权访问此会话");
+            }
+        } else {
+            Long userId1 = Math.min(senderId, receiverId);
+            Long userId2 = Math.max(senderId, receiverId);
+            LambdaQueryWrapper<MessageChat> chatQueryWrapper = new LambdaQueryWrapper<>();
+            chatQueryWrapper.eq(MessageChat::getUserId1, userId1)
+                    .eq(MessageChat::getUserId2, userId2);
+            chat = messageChatMapper.selectOne(chatQueryWrapper);
+            if (chat == null) {
+                chat = new MessageChat();
+                chat.setUserId1(userId1);
+                chat.setUserId2(userId2);
+                messageChatMapper.insert(chat);
+            }
         }
-        // 构建消息
         Message message = new Message();
         message.setChatId(chat.getId());
         message.setSenderId(senderId);
@@ -230,25 +240,55 @@ public class MessageServiceImpl implements MessageService {
         if (MessageWebSocketHandler.isUserOnline(receiverId))
             message.setIsRead(1);
         messageMapper.insert(message);
-        // 更新聊天会话
         chat.setLastMsgId(message.getId());
         chat.setLastMsgContent(content);
         messageChatMapper.updateById(chat);
 
 
-        // 尝试推送消息
         try {
             MessageVO messageVO = buildMessageVO(message);
             String messageJson = objectMapper.writeValueAsString(messageVO);
             MessageWebSocketHandler.sendMessageToUser(receiverId, messageJson);
         }
         catch (Exception e) {
-            // 记录推送消息失败的日志，但不影响主流程返回成功
             System.err.println("推送消息给用户 " + receiverId + " 失败: " + e.getMessage());
 
         }
 
         return ResultVO.success(ResultCodeEnum.SUCCESS);
+    }
+
+    @Override
+    @Transactional
+    public ResultVO<Long> getOrCreateChat(GetOrCreateChatDTO getOrCreateChatDTO) {
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        Long otherUserId = getOrCreateChatDTO.getOtherUserId();
+
+        if (otherUserId.equals(currentUserId)) {
+            return ResultVO.error("不能与自己创建会话");
+        }
+
+        User otherUser = userMapper.selectById(otherUserId);
+        if (otherUser == null) {
+            return ResultVO.error("用户不存在");
+        }
+
+        Long userId1 = Math.min(currentUserId, otherUserId);
+        Long userId2 = Math.max(currentUserId, otherUserId);
+
+        LambdaQueryWrapper<MessageChat> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(MessageChat::getUserId1, userId1)
+                .eq(MessageChat::getUserId2, userId2);
+        MessageChat chat = messageChatMapper.selectOne(queryWrapper);
+
+        if (chat == null) {
+            chat = new MessageChat();
+            chat.setUserId1(userId1);
+            chat.setUserId2(userId2);
+            messageChatMapper.insert(chat);
+        }
+
+        return ResultVO.success(chat.getId());
     }
 
     private MessageVO buildMessageVO(Message message) {

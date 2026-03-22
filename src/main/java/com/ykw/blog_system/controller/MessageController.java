@@ -2,6 +2,7 @@ package com.ykw.blog_system.controller;
 
 import com.ykw.blog_system.dto.ChatIdQueryDTO;
 import com.ykw.blog_system.dto.ChatListQueryDTO;
+import com.ykw.blog_system.dto.GetOrCreateChatDTO;
 import com.ykw.blog_system.dto.MessageListQueryDTO;
 import com.ykw.blog_system.dto.SendMessageDTO;
 import com.ykw.blog_system.service.MessageService;
@@ -64,6 +65,17 @@ public class MessageController {
     @PostMapping("/unread/count")
     public ResultVO<Long> getUnreadMessageCount() {
         return messageService.getUnreadMessageCount();
+    }
+
+    /**
+     * 获取或创建会话
+     *
+     * @param getOrCreateChatDTO 获取或创建会话参数
+     * @return 会话 ID
+     */
+    @PostMapping("/chat/get-or-create")
+    public ResultVO<Long> getOrCreateChat(@RequestBody GetOrCreateChatDTO getOrCreateChatDTO) {
+        return messageService.getOrCreateChat(getOrCreateChatDTO);
     }
 
 
