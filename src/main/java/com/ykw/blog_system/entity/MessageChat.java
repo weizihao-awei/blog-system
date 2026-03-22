@@ -20,5 +20,7 @@ public class MessageChat {
 
     private Long lastMsgId;
 
+    private String lastMsgContent;
+
     private LocalDateTime updateTime;
 }

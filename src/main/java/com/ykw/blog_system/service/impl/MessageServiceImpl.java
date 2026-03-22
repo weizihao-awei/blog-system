@@ -73,12 +73,12 @@ public class MessageServiceImpl implements MessageService {
             }
 
             chatVO.setLastMessageId(chat.getLastMsgId());
+            chatVO.setLastMessageContent(chat.getLastMsgContent());
             chatVO.setUpdateTime(chat.getUpdateTime());
 
             if (chat.getLastMsgId() != null) {
                 Message lastMessage = messageMapper.selectById(chat.getLastMsgId());
                 if (lastMessage != null) {
-                    chatVO.setLastMessageContent(lastMessage.getContent());
                     chatVO.setLastMessageTime(lastMessage.getCreateTime());
                 }
             }
@@ -280,6 +280,7 @@ public class MessageServiceImpl implements MessageService {
         messageMapper.insert(message);
 
         chat.setLastMsgId(message.getId());
+        chat.setLastMsgContent(content);
         messageChatMapper.updateById(chat);
 
         if (MessageWebSocketHandler.isUserOnline(receiverId)) {
