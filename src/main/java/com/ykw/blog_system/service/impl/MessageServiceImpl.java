@@ -98,16 +98,7 @@ public class MessageServiceImpl implements MessageService {
         return ResultVO.success(pageVO);
     }
 
-    @Override
-    public ResultVO<Long> getChatCount() {
-        Long userId = SecurityUtil.getCurrentUserId();
-        LambdaQueryWrapper<MessageChat> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.and(wrapper -> wrapper.eq(MessageChat::getUserId1, userId)
-                .or()
-                .eq(MessageChat::getUserId2, userId));
-        Long count = messageChatMapper.selectCount(queryWrapper);
-        return ResultVO.success(count);
-    }
+
 
 
     /**
@@ -183,43 +174,6 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public ResultVO<Long> getMessageCount(Long chatId) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        MessageChat chat = messageChatMapper.selectById(chatId);
-        if (chat == null) {
-            return ResultVO.error("会话不存在");
-        }
-
-        if (!chat.getUserId1().equals(userId) && !chat.getUserId2().equals(userId)) {
-            return ResultVO.error("无权访问此会话");
-        }
-
-        LambdaQueryWrapper<Message> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Message::getChatId, chatId);
-        Long count = messageMapper.selectCount(queryWrapper);
-        return ResultVO.success(count);
-    }
-
-    @Override
-    public ResultVO<Long> getTotalMessageCount() {
-        Long userId = SecurityUtil.getCurrentUserId();
-        LambdaQueryWrapper<MessageChat> chatQueryWrapper = new LambdaQueryWrapper<>();
-        chatQueryWrapper.and(wrapper -> wrapper.eq(MessageChat::getUserId1, userId)
-                .or()
-                .eq(MessageChat::getUserId2, userId));
-        List<MessageChat> chatList = messageChatMapper.selectList(chatQueryWrapper);
-
-        Long totalCount = 0L;
-        for (MessageChat chat : chatList) {
-            LambdaQueryWrapper<Message> messageQueryWrapper = new LambdaQueryWrapper<>();
-            messageQueryWrapper.eq(Message::getChatId, chat.getId());
-            totalCount += messageMapper.selectCount(messageQueryWrapper);
-        }
-
-        return ResultVO.success(totalCount);
-    }
-
-    @Override
     public ResultVO<Long> getUnreadMessageCount() {
         Long userId = SecurityUtil.getCurrentUserId();
         LambdaQueryWrapper<Message> queryWrapper = new LambdaQueryWrapper<>();
@@ -227,34 +181,6 @@ public class MessageServiceImpl implements MessageService {
                 .eq(Message::getIsRead, 0);
         Long count = messageMapper.selectCount(queryWrapper);
         return ResultVO.success(count);
-    }
-
-    @Override
-    @Transactional
-    public ResultVO<Long> getChatId(ChatIdQueryDTO queryDTO) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        Long otherUserId = queryDTO.getOtherUserId();
-
-        if (otherUserId.equals(userId)) {
-            return ResultVO.error("不能与自己聊天");
-        }
-
-        Long userId1 = Math.min(userId, otherUserId);
-        Long userId2 = Math.max(userId, otherUserId);
-
-        LambdaQueryWrapper<MessageChat> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(MessageChat::getUserId1, userId1)
-                .eq(MessageChat::getUserId2, userId2);
-        MessageChat chat = messageChatMapper.selectOne(queryWrapper);
-
-        if (chat == null) {
-            chat = new MessageChat();
-            chat.setUserId1(userId1);
-            chat.setUserId2(userId2);
-            messageChatMapper.insert(chat);
-        }
-
-        return ResultVO.success(chat.getId());
     }
 
 

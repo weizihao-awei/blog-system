@@ -23,6 +23,17 @@ public class MessageController {
     private MessageService messageService;
 
     /**
+     * 发送消息
+     *
+     * @param sendMessageDTO 发送消息参数
+     * @return 新消息的 ID
+     */
+    @PostMapping("/send")
+    public ResultVO<Long> sendMessage(@RequestBody SendMessageDTO sendMessageDTO) {
+        return messageService.sendMessage(sendMessageDTO);
+    }
+
+    /**
      * 获取聊天会话列表
      *
      * @param queryDTO 查询参数
@@ -46,39 +57,6 @@ public class MessageController {
     }
 
     /**
-     * 获取聊天会话总数
-     *
-     * @return 聊天会话总数
-     */
-    @PostMapping("/chat/count")
-    public ResultVO<Long> getChatCount() {
-        return messageService.getChatCount();
-    }
-
-
-
-    /**
-     * 获取指定会话的消息总数
-     *
-     * @param queryDTO 查询参数（包含会话 ID）
-     * @return 消息总数
-     */
-    @PostMapping("/count")
-    public ResultVO<Long> getMessageCount(@RequestBody MessageListQueryDTO queryDTO) {
-        return messageService.getMessageCount(queryDTO.getChatId());
-    }
-
-    /**
-     * 获取全站消息总数
-     *
-     * @return 全站消息总数
-     */
-    @PostMapping("/total/count")
-    public ResultVO<Long> getTotalMessageCount() {
-        return messageService.getTotalMessageCount();
-    }
-
-    /**
      * 获取未读消息数量
      *
      * @return 未读消息数量
@@ -88,25 +66,9 @@ public class MessageController {
         return messageService.getUnreadMessageCount();
     }
 
-    /**
-     * 获取或创建聊天会话 ID
-     *
-     * @param queryDTO 查询参数
-     * @return 聊天会话 ID
-     */
-    @PostMapping("/chat/id")
-    public ResultVO<Long> getChatId(@RequestBody ChatIdQueryDTO queryDTO) {
-        return messageService.getChatId(queryDTO);
-    }
 
-    /**
-     * 发送消息
-     *
-     * @param sendMessageDTO 发送消息参数
-     * @return 新消息的 ID
-     */
-    @PostMapping("/send")
-    public ResultVO<Long> sendMessage(@RequestBody SendMessageDTO sendMessageDTO) {
-        return messageService.sendMessage(sendMessageDTO);
-    }
+
+
+
+
 }

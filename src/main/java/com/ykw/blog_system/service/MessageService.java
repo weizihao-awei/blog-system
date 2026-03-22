@@ -12,19 +12,34 @@ import com.ykw.blog_system.vo.ResultVO;
 
 public interface MessageService {
 
+    /**
+     * 获取聊天列表
+     *
+     * @param queryDTO 查询参数
+     * @return 聊天列表分页数据
+     */
     ResultVO<PageVO<ChatVO>> getChatList(ChatListQueryDTO queryDTO);
 
-    ResultVO<Long> getChatCount();
-
+    /**
+     * 获取消息列表
+     *
+     * @param queryDTO 查询参数
+     * @return 消息列表分页数据
+     */
     ResultVO<PageVO<MessageVO>> getMessageList(MessageListQueryDTO queryDTO);
 
-    ResultVO<Long> getMessageCount(Long chatId);
-
-    ResultVO<Long> getTotalMessageCount();
-
+    /**
+     * 获取未读消息数量
+     *
+     * @return 未读消息数量
+     */
     ResultVO<Long> getUnreadMessageCount();
 
-    ResultVO<Long> getChatId(ChatIdQueryDTO queryDTO);
-
+    /**
+     * 发送消息
+     *
+     * @param sendMessageDTO 发送消息参数
+     * @return 消息 ID
+     */
     ResultVO<Long> sendMessage(SendMessageDTO sendMessageDTO);
 }
