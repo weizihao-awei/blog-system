@@ -109,13 +109,20 @@ public class MessageServiceImpl implements MessageService {
         return ResultVO.success(count);
     }
 
+
+    /**
+     * 获取消息列表
+     *
+     * @param queryDTO 获取消息列表参数
+     * @return 消息列表
+     */
     @Override
     @Transactional
     public ResultVO<PageVO<MessageVO>> getMessageList(MessageListQueryDTO queryDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
         Long chatId = queryDTO.getChatId();
-        Integer pageNum = queryDTO.getPageNum() != null ? queryDTO.getPageNum() : 1;
-        Integer pageSize = queryDTO.getPageSize() != null ? queryDTO.getPageSize() : 20;
+        int pageNum = queryDTO.getPageNum() != null ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null ? queryDTO.getPageSize() : 20;
 
         MessageChat chat = messageChatMapper.selectById(chatId);
         if (chat == null) {
@@ -133,27 +140,36 @@ public class MessageServiceImpl implements MessageService {
         Page<Message> page = new Page<>(pageNum, pageSize);
         Page<Message> resultPage = messageMapper.selectPage(page, queryWrapper);
 
+
+
+        // 构建消息视图对象
         List<MessageVO> messageVOList = resultPage.getRecords().stream().map(message -> {
             MessageVO messageVO = new MessageVO();
             BeanUtils.copyProperties(message, messageVO);
-
-            User sender = userMapper.selectById(message.getSenderId());
-            if (sender != null) {
-
-                messageVO.setSenderNickname(sender.getNickname());
-                messageVO.setSenderAvatar(sender.getAvatar());
-            }
-
-            User receiver = userMapper.selectById(message.getReceiverId());
-            if (receiver != null) {
-
-                messageVO.setReceiverNickname(receiver.getNickname());
-                messageVO.setReceiverAvatar(receiver.getAvatar());
-            }
-
             return messageVO;
         }).collect(Collectors.toList());
 
+
+        //判断一下消息视图是否为空，不为空填充用户信息
+        if (!messageVOList.isEmpty()) {
+            //获取发送者信息
+            Long senderId = messageVOList.get(0).getSenderId();
+            User sender = userMapper.selectById(senderId);
+            //获取接收者信息
+            Long receiverId = messageVOList.get(0).getReceiverId();
+            User receiver = userMapper.selectById(receiverId);
+            messageVOList.forEach(messageVO -> {
+                messageVO.setSenderNickname(sender.getNickname());
+                messageVO.setSenderAvatar(sender.getAvatar());
+                messageVO.setReceiverNickname(receiver.getNickname());
+                messageVO.setReceiverAvatar(receiver.getAvatar());
+            });
+
+
+
+        }
+
+        //更新列表消息为已读
         LambdaQueryWrapper<Message> updateWrapper = new LambdaQueryWrapper<>();
         updateWrapper.eq(Message::getChatId, chatId)
                 .eq(Message::getReceiverId, userId)
