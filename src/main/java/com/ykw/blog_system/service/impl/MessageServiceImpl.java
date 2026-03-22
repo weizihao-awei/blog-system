@@ -218,6 +218,7 @@ public class MessageServiceImpl implements MessageService {
             chat = new MessageChat();
             chat.setUserId1(userId1);
             chat.setUserId2(userId2);
+            messageChatMapper.insert(chat);
         }
         // 构建消息
         Message message = new Message();
@@ -238,8 +239,7 @@ public class MessageServiceImpl implements MessageService {
         // 尝试推送消息
         try {
             MessageVO messageVO = buildMessageVO(message);
-            ResultVO<MessageVO> pushResult = ResultVO.success(ResultCodeEnum.SUCCESS, messageVO);
-            String messageJson = objectMapper.writeValueAsString(pushResult);
+            String messageJson = objectMapper.writeValueAsString(messageVO);
             MessageWebSocketHandler.sendMessageToUser(receiverId, messageJson);
         }
         catch (Exception e) {

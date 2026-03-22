@@ -57,7 +57,15 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
             session.close();
         }
     }
-
+    /**
+     * 处理接收到的 WebSocket 消息。
+     * 从会话的principal中获取用户信息，若获取成功则解析消息内容，
+     * 创建消息对象并保存到数据库中，并返回结果给发送方。
+     *
+     * @param session 当前 WebSocket 会话
+     * @param message 接收到的 WebSocket 消息
+     * @throws Exception 处理消息时可能抛出的异常
+     */
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         Long userId = (Long) session.getAttributes().get("userId");
@@ -97,6 +105,7 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
             chat.setUserId1(userId1);
             chat.setUserId2(userId2);
             messageChatMapper.insert(chat);
+
         }
 
         Message msg = new Message();
@@ -108,17 +117,17 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
         messageMapper.insert(msg);
 
         chat.setLastMsgId(msg.getId());
+        chat.setLastMsgContent(content);
         messageChatMapper.updateById(chat);
 
         MessageVO messageVO = convertToMessageVO(msg);
-        ResultVO<MessageVO> resultVO = ResultVO.success(messageVO);
-        String response = objectMapper.writeValueAsString(resultVO);
-
+        String response = objectMapper.writeValueAsString(messageVO);
+        // 发送消息给接收者
         WebSocketSession receiverSession = userSessions.get(receiverId);
         if (receiverSession != null && receiverSession.isOpen()) {
             receiverSession.sendMessage(new TextMessage(response));
         }
-
+        // 返回给发送方
         session.sendMessage(new TextMessage(response));
     }
 
