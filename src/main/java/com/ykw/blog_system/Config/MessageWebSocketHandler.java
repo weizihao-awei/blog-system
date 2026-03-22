@@ -173,14 +173,14 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
 
         User sender = userMapper.selectById(message.getSenderId());
         if (sender != null) {
-            messageVO.setSenderUsername(sender.getUsername());
+
             messageVO.setSenderNickname(sender.getNickname());
             messageVO.setSenderAvatar(sender.getAvatar());
         }
 
         User receiver = userMapper.selectById(message.getReceiverId());
         if (receiver != null) {
-            messageVO.setReceiverUsername(receiver.getUsername());
+
             messageVO.setReceiverNickname(receiver.getNickname());
             messageVO.setReceiverAvatar(receiver.getAvatar());
         }

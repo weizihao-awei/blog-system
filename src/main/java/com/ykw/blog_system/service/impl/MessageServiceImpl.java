@@ -11,6 +11,7 @@ import com.ykw.blog_system.dto.SendMessageDTO;
 import com.ykw.blog_system.entity.Message;
 import com.ykw.blog_system.entity.MessageChat;
 import com.ykw.blog_system.entity.User;
+import com.ykw.blog_system.enums.ResultCodeEnum;
 import com.ykw.blog_system.mapper.MessageChatMapper;
 import com.ykw.blog_system.mapper.MessageMapper;
 import com.ykw.blog_system.mapper.UserMapper;
@@ -138,14 +139,14 @@ public class MessageServiceImpl implements MessageService {
 
             User sender = userMapper.selectById(message.getSenderId());
             if (sender != null) {
-                messageVO.setSenderUsername(sender.getUsername());
+
                 messageVO.setSenderNickname(sender.getNickname());
                 messageVO.setSenderAvatar(sender.getAvatar());
             }
 
             User receiver = userMapper.selectById(message.getReceiverId());
             if (receiver != null) {
-                messageVO.setReceiverUsername(receiver.getUsername());
+
                 messageVO.setReceiverNickname(receiver.getNickname());
                 messageVO.setReceiverAvatar(receiver.getAvatar());
             }
@@ -240,6 +241,12 @@ public class MessageServiceImpl implements MessageService {
         return ResultVO.success(chat.getId());
     }
 
+
+    /**
+     * 发送消息
+     * @param sendMessageDTO 发送消息参数
+     * @return 响应结果
+     */
     @Override
     @Transactional
     public ResultVO<Long> sendMessage(SendMessageDTO sendMessageDTO) {
@@ -248,12 +255,12 @@ public class MessageServiceImpl implements MessageService {
         String content = sendMessageDTO.getContent();
 
         if (receiverId.equals(senderId)) {
-            return ResultVO.error("不能给自己发送消息");
+            return ResultVO.error(ResultCodeEnum.MESSAGE_CANNOT_SEND_TO_SELF);
         }
 
         User receiver = userMapper.selectById(receiverId);
         if (receiver == null) {
-            return ResultVO.error("接收者不存在");
+            return ResultVO.error(ResultCodeEnum.MESSAGE_RECEIVER_NOT_FOUND);
         }
 
         Long userId1 = Math.min(senderId, receiverId);
@@ -268,7 +275,6 @@ public class MessageServiceImpl implements MessageService {
             chat = new MessageChat();
             chat.setUserId1(userId1);
             chat.setUserId2(userId2);
-            messageChatMapper.insert(chat);
         }
 
         Message message = new Message();
@@ -283,18 +289,18 @@ public class MessageServiceImpl implements MessageService {
         chat.setLastMsgContent(content);
         messageChatMapper.updateById(chat);
 
-        if (MessageWebSocketHandler.isUserOnline(receiverId)) {
-            try {
-                MessageVO messageVO = buildMessageVO(message);
-                ResultVO<MessageVO> pushResult = ResultVO.success("新消息", messageVO);
-                String messageJson = objectMapper.writeValueAsString(pushResult);
-                MessageWebSocketHandler.sendMessageToUser(receiverId, messageJson);
-            } catch (Exception e) {
-                return ResultVO.success("消息已发送", message.getId());
-            }
+
+        // 尝试推送消息，失败则直接返回成功响应
+        try {
+            MessageVO messageVO = buildMessageVO(message);
+            ResultVO<MessageVO> pushResult = ResultVO.success(ResultCodeEnum.SUCCESS, messageVO);
+            String messageJson = objectMapper.writeValueAsString(pushResult);
+            MessageWebSocketHandler.sendMessageToUser(receiverId, messageJson);
+        } catch (Exception e) {
+
         }
 
-        return ResultVO.success("消息已发送", message.getId());
+        return ResultVO.success(ResultCodeEnum.SUCCESS, message.getId());
     }
 
     private MessageVO buildMessageVO(Message message) {
@@ -303,14 +309,14 @@ public class MessageServiceImpl implements MessageService {
 
         User sender = userMapper.selectById(message.getSenderId());
         if (sender != null) {
-            messageVO.setSenderUsername(sender.getUsername());
+
             messageVO.setSenderNickname(sender.getNickname());
             messageVO.setSenderAvatar(sender.getAvatar());
         }
 
         User receiver = userMapper.selectById(message.getReceiverId());
         if (receiver != null) {
-            messageVO.setReceiverUsername(receiver.getUsername());
+
             messageVO.setReceiverNickname(receiver.getNickname());
             messageVO.setReceiverAvatar(receiver.getAvatar());
         }

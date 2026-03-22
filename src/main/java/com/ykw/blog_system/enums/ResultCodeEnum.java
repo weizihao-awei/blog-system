@@ -32,6 +32,11 @@ public enum ResultCodeEnum {
 
     NOT_FOLLOWED_YET(406, "未关注该用户"),
 
+    //消息服务相关错误
+    MESSAGE_CANNOT_SEND_TO_SELF(408, "不能给自己发送消息"),
+
+    MESSAGE_RECEIVER_NOT_FOUND(409, "接收者不存在"),
+
     PARAM_ERROR(407, "参数错误");
 
     private final Integer code;
