@@ -5,15 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ykw.blog_system.entity.Message;
 import com.ykw.blog_system.entity.MessageChat;
 import com.ykw.blog_system.entity.User;
-import com.ykw.blog_system.enums.ResultCodeEnum;
 import com.ykw.blog_system.mapper.MessageChatMapper;
 import com.ykw.blog_system.mapper.MessageMapper;
 import com.ykw.blog_system.mapper.UserMapper;
-import com.ykw.blog_system.utils.JwtUtil;
 import com.ykw.blog_system.vo.MessageVO;
 import com.ykw.blog_system.vo.ResultVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -38,13 +37,10 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
     @Autowired
     private MessageChatMapper messageChatMapper;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
 
     /**
      * 当 WebSocket 连接建立成功后调用。
-     * 从会话中解析用户 ID，若解析成功则将会话存入在线用户映射表，
+     * 从会话的principal中获取用户信息，若获取成功则将会话存入在线用户映射表，
      * 否则关闭当前连接以拒绝未授权的访问。
      *
      * @param session 建立的 WebSocket 会话
@@ -52,9 +48,11 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        Long userId = getUserIdFromSession(session);
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = principal instanceof User ? ((User) principal).getId() : null;
         if (userId != null) {
             userSessions.put(userId, session);
+            session.getAttributes().put("userId", userId);
         } else {
             session.close();
         }
@@ -62,7 +60,7 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        Long userId = getUserIdFromSession(session);
+        Long userId = (Long) session.getAttributes().get("userId");
         if (userId == null) {
             session.close();
             return;
@@ -126,7 +124,7 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        Long userId = getUserIdFromSession(session);
+        Long userId = (Long) session.getAttributes().get("userId");
         if (userId != null) {
             userSessions.remove(userId);
         }
@@ -134,7 +132,7 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        Long userId = getUserIdFromSession(session);
+        Long userId = (Long) session.getAttributes().get("userId");
         if (userId != null) {
             userSessions.remove(userId);
         }
@@ -166,27 +164,6 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
         if (session != null && session.isOpen()) {
             session.sendMessage(new TextMessage(message));
         }
-    }
-
-    private Long    getUserIdFromSession(WebSocketSession session) {
-        String query = session.getUri().getQuery();
-        if (query != null && query.contains("token=")) {
-            String[] params = query.split("&");
-            for (String param : params) {
-                if (param.startsWith("token=")) {
-                    try {
-                        String token = param.substring(6);
-                        ResultCodeEnum resultCode = jwtUtil.validateToken(token);
-                        if (resultCode == ResultCodeEnum.SUCCESS) {
-                            return jwtUtil.getUserIdFromToken(token);
-                        }
-                    } catch (Exception e) {
-                        return null;
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     private MessageVO convertToMessageVO(Message message) {

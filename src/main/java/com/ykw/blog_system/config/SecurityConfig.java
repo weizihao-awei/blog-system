@@ -84,6 +84,8 @@ public class SecurityConfig {
                 // 放行图片访问接口（静态资源）- 必须在 /api/** 之前
                 .requestMatchers("/api/image/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
+                // WebSocket端点需要认证
+                .requestMatchers("/ws/**").authenticated()
                 // 其他 API 接口需要认证
                 .requestMatchers("/api/**").authenticated()
                 // 其他接口需要认证
