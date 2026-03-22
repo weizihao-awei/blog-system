@@ -44,12 +44,19 @@ public class MessageServiceImpl implements MessageService {
     @Autowired
     private ObjectMapper objectMapper;
 
+
+    /**
+     * 获取聊天会话列表
+     *
+     * @param queryDTO 获取聊天会话列表参数
+     * @return 聊天会话列表
+     */
     @Override
     public ResultVO<PageVO<ChatVO>> getChatList(ChatListQueryDTO queryDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
-        Integer pageNum = queryDTO.getPageNum() != null ? queryDTO.getPageNum() : 1;
-        Integer pageSize = queryDTO.getPageSize() != null ? queryDTO.getPageSize() : 10;
-
+        int pageNum = queryDTO.getPageNum() != null ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null ? queryDTO.getPageSize() : 10;
+        // 查询会话列表
         LambdaQueryWrapper<MessageChat> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.and(wrapper -> wrapper.eq(MessageChat::getUserId1, userId)
                 .or()
@@ -68,7 +75,6 @@ public class MessageServiceImpl implements MessageService {
 
             User otherUser = userMapper.selectById(otherUserId);
             if (otherUser != null) {
-                chatVO.setOtherUsername(otherUser.getUsername());
                 chatVO.setOtherNickname(otherUser.getNickname());
                 chatVO.setOtherAvatar(otherUser.getAvatar());
             }
@@ -77,13 +83,7 @@ public class MessageServiceImpl implements MessageService {
             chatVO.setLastMessageContent(chat.getLastMsgContent());
             chatVO.setUpdateTime(chat.getUpdateTime());
 
-            if (chat.getLastMsgId() != null) {
-                Message lastMessage = messageMapper.selectById(chat.getLastMsgId());
-                if (lastMessage != null) {
-                    chatVO.setLastMessageTime(lastMessage.getCreateTime());
-                }
-            }
-
+            // 获取未读消息数量
             LambdaQueryWrapper<Message> unreadQueryWrapper = new LambdaQueryWrapper<>();
             unreadQueryWrapper.eq(Message::getChatId, chat.getId())
                     .eq(Message::getReceiverId, userId)

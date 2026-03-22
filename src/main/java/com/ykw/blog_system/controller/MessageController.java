@@ -33,15 +33,6 @@ public class MessageController {
         return messageService.getChatList(queryDTO);
     }
 
-    /**
-     * 获取聊天会话总数
-     *
-     * @return 聊天会话总数
-     */
-    @PostMapping("/chat/count")
-    public ResultVO<Long> getChatCount() {
-        return messageService.getChatCount();
-    }
 
     /**
      * 获取消息列表
@@ -53,6 +44,18 @@ public class MessageController {
     public ResultVO<PageVO<MessageVO>> getMessageList(@RequestBody MessageListQueryDTO queryDTO) {
         return messageService.getMessageList(queryDTO);
     }
+
+    /**
+     * 获取聊天会话总数
+     *
+     * @return 聊天会话总数
+     */
+    @PostMapping("/chat/count")
+    public ResultVO<Long> getChatCount() {
+        return messageService.getChatCount();
+    }
+
+
 
     /**
      * 获取指定会话的消息总数
