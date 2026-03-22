@@ -196,37 +196,40 @@ public class MessageServiceImpl implements MessageService {
         Long receiverId = sendMessageDTO.getReceiverId();
         String content = sendMessageDTO.getContent();
 
+        // 不能发送给自己
         if (receiverId.equals(senderId)) {
             return ResultVO.error(ResultCodeEnum.MESSAGE_CANNOT_SEND_TO_SELF);
         }
-
+        // 获取接收者信息, 如果接收者不存在则返回错误
         User receiver = userMapper.selectById(receiverId);
         if (receiver == null) {
             return ResultVO.error(ResultCodeEnum.MESSAGE_RECEIVER_NOT_FOUND);
         }
 
+        // 获取聊天会话
         Long userId1 = Math.min(senderId, receiverId);
         Long userId2 = Math.max(senderId, receiverId);
-
         LambdaQueryWrapper<MessageChat> chatQueryWrapper = new LambdaQueryWrapper<>();
         chatQueryWrapper.eq(MessageChat::getUserId1, userId1)
                 .eq(MessageChat::getUserId2, userId2);
         MessageChat chat = messageChatMapper.selectOne(chatQueryWrapper);
-
+        // 如果不存在则创建
         if (chat == null) {
             chat = new MessageChat();
             chat.setUserId1(userId1);
             chat.setUserId2(userId2);
         }
-
+        // 构建消息
         Message message = new Message();
         message.setChatId(chat.getId());
         message.setSenderId(senderId);
         message.setReceiverId(receiverId);
         message.setContent(content);
         message.setIsRead(0);
+        if (MessageWebSocketHandler.isUserOnline(receiverId))
+            message.setIsRead(1);
         messageMapper.insert(message);
-
+        // 更新聊天会话
         chat.setLastMsgId(message.getId());
         chat.setLastMsgContent(content);
         messageChatMapper.updateById(chat);
@@ -238,11 +241,14 @@ public class MessageServiceImpl implements MessageService {
             ResultVO<MessageVO> pushResult = ResultVO.success(ResultCodeEnum.SUCCESS, messageVO);
             String messageJson = objectMapper.writeValueAsString(pushResult);
             MessageWebSocketHandler.sendMessageToUser(receiverId, messageJson);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
+            // 记录推送消息失败的日志，但不影响主流程返回成功
+            System.err.println("推送消息给用户 " + receiverId + " 失败: " + e.getMessage());
 
         }
 
-        return ResultVO.success(ResultCodeEnum.SUCCESS, message.getId());
+        return ResultVO.success(ResultCodeEnum.SUCCESS);
     }
 
     private MessageVO buildMessageVO(Message message) {
