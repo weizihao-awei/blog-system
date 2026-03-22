@@ -41,6 +41,15 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
     @Autowired
     private JwtUtil jwtUtil;
 
+
+    /**
+     * 当 WebSocket 连接建立成功后调用。
+     * 从会话中解析用户 ID，若解析成功则将会话存入在线用户映射表，
+     * 否则关闭当前连接以拒绝未授权的访问。
+     *
+     * @param session 建立的 WebSocket 会话
+     * @throws Exception 处理连接时可能抛出的异常
+     */
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         Long userId = getUserIdFromSession(session);
@@ -134,11 +143,24 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    /**
+     * 判断指定用户是否在线
+     *
+     * @param userId 用户 ID
+     * @return 如果用户在线且会话已打开则返回 true，否则返回 false
+     */
     public static boolean isUserOnline(Long userId) {
         WebSocketSession session = userSessions.get(userId);
         return session != null && session.isOpen();
     }
 
+    /**
+     * 向指定用户发送消息
+     *
+     * @param userId  接收消息的用户 ID
+     * @param message 要发送的消息内容
+     * @throws IOException 如果发送消息时发生 IO 异常
+     */
     public static void sendMessageToUser(Long userId, String message) throws IOException {
         WebSocketSession session = userSessions.get(userId);
         if (session != null && session.isOpen()) {
@@ -146,7 +168,7 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private Long getUserIdFromSession(WebSocketSession session) {
+    private Long    getUserIdFromSession(WebSocketSession session) {
         String query = session.getUri().getQuery();
         if (query != null && query.contains("token=")) {
             String[] params = query.split("&");

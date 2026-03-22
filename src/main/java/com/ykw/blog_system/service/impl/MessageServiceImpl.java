@@ -235,7 +235,7 @@ public class MessageServiceImpl implements MessageService {
         messageChatMapper.updateById(chat);
 
 
-        // 尝试推送消息，失败则直接返回成功响应
+        // 尝试推送消息
         try {
             MessageVO messageVO = buildMessageVO(message);
             ResultVO<MessageVO> pushResult = ResultVO.success(ResultCodeEnum.SUCCESS, messageVO);
