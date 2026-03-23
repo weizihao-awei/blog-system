@@ -22,16 +22,22 @@ import com.ykw.blog_system.vo.ChatVO;
 import com.ykw.blog_system.vo.MessageVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class MessageServiceImpl implements MessageService {
+    //日志对象
+    private static final Logger logger = LoggerFactory.getLogger(MessageServiceImpl.class);
 
     @Autowired
     private MessageChatMapper messageChatMapper;
@@ -142,23 +148,30 @@ public class MessageServiceImpl implements MessageService {
         }).collect(Collectors.toList());
 
 
-        //判断一下消息视图是否为空，不为空填充用户信息
         if (!messageVOList.isEmpty()) {
-            //获取发送者信息
-            Long senderId = messageVOList.get(0).getSenderId();
-            User sender = userMapper.selectById(senderId);
-            //获取接收者信息
-            Long receiverId = messageVOList.get(0).getReceiverId();
-            User receiver = userMapper.selectById(receiverId);
+            // 获取两个用户的ID
+            Long userId1 = messageVOList.get(0).getSenderId();
+            Long userId2 = messageVOList.get(0).getReceiverId();
+
+            // 查询两个用户
+            User user1 = userMapper.selectById(userId1);
+            User user2 = userMapper.selectById(userId2);
+
+            // 建立映射
+            Map<Long, User> userMap = new HashMap<>();
+            userMap.put(user1.getId(), user1);
+            userMap.put(user2.getId(), user2);
+
+            // 填充消息
             messageVOList.forEach(messageVO -> {
+                User sender = userMap.get(messageVO.getSenderId());
+                User receiver = userMap.get(messageVO.getReceiverId());
+
                 messageVO.setSenderNickname(sender.getNickname());
                 messageVO.setSenderAvatar(sender.getAvatar());
                 messageVO.setReceiverNickname(receiver.getNickname());
                 messageVO.setReceiverAvatar(receiver.getAvatar());
             });
-
-
-
         }
 
         //更新列表消息为已读

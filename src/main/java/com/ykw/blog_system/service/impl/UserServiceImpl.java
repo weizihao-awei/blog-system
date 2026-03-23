@@ -15,6 +15,7 @@ import com.ykw.blog_system.vo.AuthorInfoVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
 import com.ykw.blog_system.vo.TagVO;
+import com.ykw.blog_system.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,13 +52,17 @@ public class UserServiceImpl implements UserService {
 
     
     @Override
-    public ResultVO<User> getCurrentUserInfo(Long userId) {
+    public ResultVO<UserVO> getCurrentUserInfo(Long userId) {
         User user = userMapper.selectById(userId);
         if (user == null) {
             return ResultVO.error("用户不存在");
         }
-        user.setPassword(null);
-        return ResultVO.success(user);
+        
+        // 将 User 转换为 UserVO
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        
+        return ResultVO.success(userVO);
     }
     
     @Override

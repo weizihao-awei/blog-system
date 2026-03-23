@@ -11,15 +11,13 @@ import com.ykw.blog_system.vo.AuthorInfoVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
 import com.ykw.blog_system.vo.TagVO;
+import com.ykw.blog_system.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+
 
 /**
  * 用户控制器
@@ -35,9 +33,19 @@ public class UserController {
      * 获取当前用户信息
      */
     @GetMapping("/info")
-    public ResultVO<User> getCurrentUserInfo() {
+    public ResultVO<UserVO> getCurrentUserInfo() {
         Long userId = SecurityUtil.getCurrentUserId();
         return userService.getCurrentUserInfo(userId);
+    }
+
+    /**
+     * 获取作者信息
+     * @param queryDTO 查询参数
+     * @return 作者信息
+     */
+    @PostMapping("/author/info")
+    public ResultVO<AuthorInfoVO> getAuthorInfo(@RequestBody AuthorInfoQueryDTO queryDTO) {
+        return userService.getAuthorInfo(queryDTO.getUserId());
     }
     
     /**
@@ -85,15 +93,7 @@ public class UserController {
         return userService.getUserPublishedArticlesPage(queryDTO);
     }
 
-    /**
-     * 获取作者信息
-     * @param queryDTO 查询参数
-     * @return 作者信息
-     */
-    @PostMapping("/author/info")
-    public ResultVO<AuthorInfoVO> getAuthorInfo(@RequestBody AuthorInfoQueryDTO queryDTO) {
-        return userService.getAuthorInfo(queryDTO.getUserId());
-    }
+
 
 //    /**
 //     * 获取用户列表（管理员）

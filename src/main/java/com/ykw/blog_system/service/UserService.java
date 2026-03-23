@@ -6,6 +6,7 @@ import com.ykw.blog_system.vo.ArticleVO;
 import com.ykw.blog_system.vo.AuthorInfoVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
+import com.ykw.blog_system.vo.UserVO;
 
 /**
  * 用户服务接口
@@ -15,7 +16,7 @@ public interface UserService {
     /**
      * 获取当前用户信息
      */
-    ResultVO<User> getCurrentUserInfo(Long userId);
+    ResultVO<UserVO> getCurrentUserInfo(Long userId);
     
     /**
      * 更新用户信息
