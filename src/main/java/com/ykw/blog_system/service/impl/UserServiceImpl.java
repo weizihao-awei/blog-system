@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService {
 
     
     @Override
-    public ResultVO<UserVO> getCurrentUserInfo(Long userId) {
+    public ResultVO<UserVO> getUserInfo(Long userId) {
         User user = userMapper.selectById(userId);
         if (user == null) {
             return ResultVO.error("用户不存在");

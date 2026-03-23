@@ -30,12 +30,17 @@ public class UserController {
     private UserService userService;
 
     /**
-     * 获取当前用户信息
+     * 获取用户信息
+     * @param userId 用户 ID（可选，不传则查询当前登录用户）
+     * @return 用户信息
      */
     @GetMapping("/info")
-    public ResultVO<UserVO> getCurrentUserInfo() {
-        Long userId = SecurityUtil.getCurrentUserId();
-        return userService.getCurrentUserInfo(userId);
+    public ResultVO<UserVO> getUserInfo(@RequestParam(required = false) Long userId) {
+        // 如果没有传入 userId，则使用当前登录用户的 ID
+        if (userId == null) {
+            userId = SecurityUtil.getCurrentUserId();
+        }
+        return userService.getUserInfo(userId);
     }
 
     /**

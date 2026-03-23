@@ -14,9 +14,9 @@ import com.ykw.blog_system.vo.UserVO;
 public interface UserService {
     
     /**
-     * 获取当前用户信息
+     * 获取用户信息
      */
-    ResultVO<UserVO> getCurrentUserInfo(Long userId);
+    ResultVO<UserVO> getUserInfo(Long userId);
     
     /**
      * 更新用户信息
