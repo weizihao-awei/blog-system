@@ -272,6 +272,20 @@ public class UserServiceImpl implements UserService {
                 .sum();
         authorInfoVO.setTotalCollections(totalCollections);
 
+        // 查询当前用户是否关注了该作者
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        if (currentUserId != null) {
+            UserRelation userRelation = userRelationMapper.selectOne(
+                new LambdaQueryWrapper<UserRelation>()
+                    .eq(UserRelation::getUserId, userId)
+                    .eq(UserRelation::getFollowUserId, currentUserId)
+                    .eq(UserRelation::getFollowState, FollowStateEnum.FOLLOWED.getCode())
+            );
+            authorInfoVO.setIsFollowed(userRelation != null);
+        } else {
+            authorInfoVO.setIsFollowed(false);
+        }
+
         return ResultVO.success(ResultCodeEnum.SUCCESS, authorInfoVO);
     }
 

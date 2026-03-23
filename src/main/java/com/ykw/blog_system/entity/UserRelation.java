@@ -23,7 +23,7 @@ public class UserRelation {
     private Long userId;
 
     /**
-     * 被关注用户 ID
+     * 粉丝ID
      */
     private Long followUserId;
 
