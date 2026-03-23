@@ -67,6 +67,7 @@ public class UserRelationServiceImpl implements UserRelationService {
             existingRelation.setUserId(targetUserId);
             existingRelation.setFollowUserId(currentUserId);
             existingRelation.setFollowState(FollowStateEnum.UNFOLLOWED.getCode());
+            userRelationMapper.insert(existingRelation);
         }
 
         //switch判断是关注还是取消关注
