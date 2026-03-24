@@ -10,6 +10,7 @@ import com.ykw.blog_system.mapper.MessageMapper;
 import com.ykw.blog_system.mapper.UserMapper;
 import com.ykw.blog_system.vo.MessageVO;
 import com.ykw.blog_system.vo.ResultVO;
+import org.slf4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class MessageWebSocketHandler extends TextWebSocketHandler {
+    Logger log = org.slf4j.LoggerFactory.getLogger(MessageWebSocketHandler.class);
 
     private static final Map<Long, WebSocketSession> userSessions = new ConcurrentHashMap<>();
 
@@ -48,12 +50,13 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long userId = principal instanceof User ? ((User) principal).getId() : null;
+        log.info("连接成功");
+        Long userId = (Long) session.getAttributes().get("userId");
         if (userId != null) {
+            log.info("用户连接成功：{}", userId);
             userSessions.put(userId, session);
-            session.getAttributes().put("userId", userId);
         } else {
+            log.warn("用户连接失败：未找到用户ID");
             session.close();
         }
     }

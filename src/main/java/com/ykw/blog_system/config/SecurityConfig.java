@@ -1,6 +1,7 @@
 package com.ykw.blog_system.Config;
 
 import com.ykw.blog_system.security.JwtAuthenticationFilter;
+import com.ykw.blog_system.security.WebSocketJwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +34,9 @@ public class SecurityConfig {
     
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    @Autowired
+    private WebSocketJwtFilter webSocketJwtFilter;
     
     @Autowired
     private UserDetailsService userDetailsService;
@@ -84,13 +88,14 @@ public class SecurityConfig {
                 // 放行图片访问接口（静态资源）- 必须在 /api/** 之前
                 .requestMatchers("/api/image/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
-                // WebSocket端点需要认证
+                // WebSocket 端点需要认证（由 JwtAuthenticationFilter 处理）
                 .requestMatchers("/ws/**").authenticated()
                 // 其他 API 接口需要认证
                 .requestMatchers("/api/**").authenticated()
                 // 其他接口需要认证
                 .anyRequest().authenticated()
             )
+            .addFilterBefore(webSocketJwtFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();

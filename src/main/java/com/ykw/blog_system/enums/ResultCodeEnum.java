@@ -37,7 +37,7 @@ public enum ResultCodeEnum {
 
     MESSAGE_RECEIVER_NOT_FOUND(409, "接收者不存在"),
 
-    PARAM_ERROR(407, "参数错误");
+    PARAM_ERROR(407, "参数错误"), UNAUTHORIZED(410, "未授权");
 
     private final Integer code;
     private final String message;
