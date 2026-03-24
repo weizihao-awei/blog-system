@@ -65,7 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         Long userId = jwtUtil.getUserIdFromToken(token);
         User user = userMapper.selectById(userId);
-        logger.info("通过token获取的用户ID: {}", userId);
+        logger.info(" Token 获取的用户信息 - ID: {}, 昵称：{}", userId, user != null ? user.getNickname() : "未知用户");
 
         if (user != null && user.getStatus() == 1) {
             UsernamePasswordAuthenticationToken authentication =

@@ -19,7 +19,7 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                     WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         
-        log.info("WebSocket握手请求：{}", request.getURI());
+
         
         if (request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
@@ -31,7 +31,7 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
                     User user = (User) principal;
                     attributes.put("userId", user.getId());
                     attributes.put("user", user);
-                    log.info("WebSocket握手成功，用户ID：{}", user.getId());
+                    log.info("WebSocket握手成功，用户ID：{}用户名称{}", user.getId(), user.getNickname());
                     return true;
                 }
             }
