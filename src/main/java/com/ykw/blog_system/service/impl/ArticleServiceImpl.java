@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ykw.blog_system.dto.ArticleDTO;
 import com.ykw.blog_system.dto.ArticleOperationDTO;
 import com.ykw.blog_system.dto.ArticleQueryDTO;
+import com.ykw.blog_system.dto.MonthStatisticsDTO;
+import com.ykw.blog_system.dto.TimelineQueryDTO;
 import com.ykw.blog_system.entity.*;
 import com.ykw.blog_system.enums.ArticleOperationType;
 import com.ykw.blog_system.enums.ArticleOrderEnum;
@@ -13,6 +15,7 @@ import com.ykw.blog_system.mapper.*;
 import com.ykw.blog_system.service.ArticleService;
 import com.ykw.blog_system.utils.SecurityUtil;
 import com.ykw.blog_system.vo.ArticleVO;
+import com.ykw.blog_system.vo.MonthStatisticsVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
 import com.ykw.blog_system.vo.TagVO;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -332,38 +336,6 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     /**
-     * 获取最新文章
-     */
-    @Override
-    public ResultVO<PageVO<ArticleVO>> getLatestArticles(ArticleQueryDTO queryDTO) {
-        Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
-        
-        LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Article::getStatus, 1)
-                .orderByDesc(Article::getPublishTime,Article::getIsTop);
-        
-        // 分类 ID 过滤
-        if (queryDTO.getCategoryId() != null) {
-            wrapper.eq(Article::getCategoryId, queryDTO.getCategoryId());
-        }
-        
-        // 关键字过滤
-        if (queryDTO.getKeyword() != null && !queryDTO.getKeyword().isEmpty()) {
-            wrapper.and(w -> w.like(Article::getTitle, queryDTO.getKeyword())
-                    .or().like(Article::getSummary, queryDTO.getKeyword()));
-        }
-        
-        Page<Article> pageResult = articleMapper.selectPage(page, wrapper);
-        List<Article> list = pageResult.getRecords();
-        
-        // 转换为 ArticleVO 并加载标签
-        List<ArticleVO> voList = convertToVOList(list);
-        
-        PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(), 
-                                               queryDTO.getPageNum(), queryDTO.getPageSize());
-        return ResultVO.success(pageVO);
-    }
-    /**
      * 获取推荐文章（核心优化方法）
      */
     @Override
@@ -614,5 +586,63 @@ public class ArticleServiceImpl implements ArticleService {
         public double getScore() {
             return score;
         }
+    }
+
+    @Override
+    public ResultVO<MonthStatisticsVO> getMonthStatistics(MonthStatisticsDTO statisticsDTO) {
+        List<Map<String, Object>> dailyCountList = articleMapper.selectDailyCountByMonth(
+                statisticsDTO.getYear(), statisticsDTO.getMonth());
+
+        MonthStatisticsVO monthStatisticsVO = new MonthStatisticsVO();
+        monthStatisticsVO.setYear(statisticsDTO.getYear());
+        monthStatisticsVO.setMonth(statisticsDTO.getMonth());
+
+        List<MonthStatisticsVO.DailyCountVO> dailyCounts = dailyCountList.stream()
+                .map(map -> {
+                    MonthStatisticsVO.DailyCountVO dailyCountVO = new MonthStatisticsVO.DailyCountVO();
+                    dailyCountVO.setDay(((Number) map.get("day")).intValue());
+                    dailyCountVO.setCount(((Number) map.get("count")).intValue());
+                    return dailyCountVO;
+                })
+                .collect(Collectors.toList());
+
+        monthStatisticsVO.setDailyCounts(dailyCounts);
+        return ResultVO.success(monthStatisticsVO);
+    }
+
+    @Override
+    public ResultVO<PageVO<ArticleVO>> getArticlesBeforeDate(TimelineQueryDTO queryDTO) {
+        LocalDate date = queryDTO.getDate();
+        if (date == null) {
+            date = LocalDate.now();
+        }
+
+        Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
+        Page<Article> pageResult = articleMapper.selectArticlesBeforeDate(page, date);
+
+        List<Article> list = pageResult.getRecords();
+        List<ArticleVO> voList = convertToVOList(list);
+
+        PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(),
+                queryDTO.getPageNum(), queryDTO.getPageSize());
+        return ResultVO.success(pageVO);
+    }
+
+    @Override
+    public ResultVO<PageVO<ArticleVO>> getArticlesAfterDate(TimelineQueryDTO queryDTO) {
+        LocalDate date = queryDTO.getDate();
+        if (date == null) {
+            date = LocalDate.now();
+        }
+
+        Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
+        Page<Article> pageResult = articleMapper.selectArticlesAfterDate(page, date);
+
+        List<Article> list = pageResult.getRecords();
+        List<ArticleVO> voList = convertToVOList(list);
+
+        PageVO<ArticleVO> pageVO = new PageVO<>(voList, pageResult.getTotal(),
+                queryDTO.getPageNum(), queryDTO.getPageSize());
+        return ResultVO.success(pageVO);
     }
 }

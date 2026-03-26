@@ -3,10 +3,13 @@ package com.ykw.blog_system.controller;
 import com.ykw.blog_system.dto.ArticleDTO;
 import com.ykw.blog_system.dto.ArticleOperationDTO;
 import com.ykw.blog_system.dto.ArticleQueryDTO;
+import com.ykw.blog_system.dto.MonthStatisticsDTO;
+import com.ykw.blog_system.dto.TimelineQueryDTO;
 
 import com.ykw.blog_system.service.ArticleService;
 import com.ykw.blog_system.utils.SecurityUtil;
 import com.ykw.blog_system.vo.ArticleVO;
+import com.ykw.blog_system.vo.MonthStatisticsVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
 import jakarta.validation.Valid;
@@ -24,17 +27,6 @@ public class ArticleController {
     @Autowired
     private ArticleService articleService;
 
-    /**
-     * 获取最新文章
-     */
-    @PostMapping("/latest")
-    public ResultVO<PageVO<ArticleVO>> getLatestArticles(@RequestBody(required = false) ArticleQueryDTO queryDTO) {
-        if (queryDTO == null) {
-            queryDTO = new ArticleQueryDTO();
-        }
-        return articleService.getLatestArticles(queryDTO);
-    }
-    
     /**
      * 通用文章查询接口（POST）
      * 支持：分类、标签、关键字搜索、排序
@@ -116,5 +108,35 @@ public class ArticleController {
         }
         Long userId = SecurityUtil.getCurrentUserId();
         return articleService.getRecommendArticles(userId, queryDTO);
+    }
+
+    /**
+     * 获取月份文章统计
+     */
+    @PostMapping("/timeline/month-statistics")
+    public ResultVO<MonthStatisticsVO> getMonthStatistics(@Valid @RequestBody MonthStatisticsDTO statisticsDTO) {
+        return articleService.getMonthStatistics(statisticsDTO);
+    }
+
+    /**
+     * 获取指定日期及之前的文章（时间轴向前查询）
+     */
+    @PostMapping("/timeline/before")
+    public ResultVO<PageVO<ArticleVO>> getArticlesBeforeDate(@RequestBody(required = false) TimelineQueryDTO queryDTO) {
+        if (queryDTO == null) {
+            queryDTO = new TimelineQueryDTO();
+        }
+        return articleService.getArticlesBeforeDate(queryDTO);
+    }
+
+    /**
+     * 获取指定日期及之后的文章（时间轴向后查询）
+     */
+    @PostMapping("/timeline/after")
+    public ResultVO<PageVO<ArticleVO>> getArticlesAfterDate(@RequestBody(required = false) TimelineQueryDTO queryDTO) {
+        if (queryDTO == null) {
+            queryDTO = new TimelineQueryDTO();
+        }
+        return articleService.getArticlesAfterDate(queryDTO);
     }
 }

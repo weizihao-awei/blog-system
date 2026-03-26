@@ -3,8 +3,11 @@ package com.ykw.blog_system.service;
 import com.ykw.blog_system.dto.ArticleDTO;
 import com.ykw.blog_system.dto.ArticleOperationDTO;
 import com.ykw.blog_system.dto.ArticleQueryDTO;
+import com.ykw.blog_system.dto.MonthStatisticsDTO;
+import com.ykw.blog_system.dto.TimelineQueryDTO;
 import com.ykw.blog_system.entity.Article;
 import com.ykw.blog_system.vo.ArticleVO;
+import com.ykw.blog_system.vo.MonthStatisticsVO;
 import com.ykw.blog_system.vo.PageVO;
 import com.ykw.blog_system.vo.ResultVO;
 
@@ -30,11 +33,13 @@ public interface ArticleService {
 
     ResultVO<Void> operateArticle(ArticleOperationDTO operationDTO, Long userId);
 
-
-    
     ResultVO<PageVO<ArticleVO>> getHotArticles(ArticleQueryDTO queryDTO);
-    
-    ResultVO<PageVO<ArticleVO>> getLatestArticles(ArticleQueryDTO queryDTO);
-    
+
     ResultVO<PageVO<ArticleVO>> getRecommendArticles(Long userId, ArticleQueryDTO queryDTO);
+
+    ResultVO<MonthStatisticsVO> getMonthStatistics(MonthStatisticsDTO statisticsDTO);
+
+    ResultVO<PageVO<ArticleVO>> getArticlesBeforeDate(TimelineQueryDTO queryDTO);
+
+    ResultVO<PageVO<ArticleVO>> getArticlesAfterDate(TimelineQueryDTO queryDTO);
 }
