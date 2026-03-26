@@ -6,11 +6,10 @@
         <id column="id" property="id"/>
         <result column="title" property="title"/>
         <result column="summary" property="summary"/>
-        <result column="content" property="content"/>
-        <result column="html_content" property="htmlContent"/>
         <result column="cover_image" property="coverImage"/>
         <result column="author_id" property="authorId"/>
         <result column="category_id" property="categoryId"/>
+        <result column="article_content_id" property="articleContentId"/>
         <result column="view_count" property="viewCount"/>
         <result column="like_count" property="likeCount"/>
         <result column="comment_count" property="commentCount"/>
@@ -29,134 +28,11 @@
     </resultMap>
     
     <sql id="Base_Column_List">
-        a.id, a.title, a.summary, a.content, a.html_content, a.cover_image, 
-        a.author_id, a.category_id, a.view_count, a.like_count, a.comment_count,
+        a.id, a.title, a.summary, a.cover_image,
+        a.author_id, a.category_id, a.article_content_id, a.view_count, a.like_count, a.comment_count,
         a.status, a.is_top, a.is_recommend, a.publish_time, a.create_time, a.update_time
     </sql>
-    
-    <select id="selectById" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/> FROM article a WHERE a.id = #{id}
-    </select>
-    
-    <select id="selectByIdWithTags" resultMap="ArticleWithAuthorResultMap">
-        SELECT 
-            <include refid="Base_Column_List"/>,
-            u.nickname as author_name, u.avatar as author_avatar,
-            c.name as category_name
-        FROM article a
-        LEFT JOIN user u ON a.author_id = u.id
-        LEFT JOIN category c ON a.category_id = c.id
-        WHERE a.id = #{id}
-    </select>
-    
-    <select id="selectByTagId" resultMap="ArticleWithAuthorResultMap">
-        SELECT 
-            <include refid="Base_Column_List"/>,
-            u.nickname as author_name, u.avatar as author_avatar,
-            c.name as category_name
-        FROM article a
-        INNER JOIN article_tag at ON a.id = at.article_id
-        LEFT JOIN user u ON a.author_id = u.id
-        LEFT JOIN category c ON a.category_id = c.id
-        <where>
-            at.tag_id = #{tagId}
-            <if test="status != null">
-                AND a.status = #{status}
-            </if>
-        </where>
-        ORDER BY a.is_top DESC, a.publish_time DESC
-    </select>
-    
-    <select id="selectByUserId" resultMap="ArticleWithAuthorResultMap">
-        SELECT 
-            <include refid="Base_Column_List"/>,
-            u.nickname as author_name, u.avatar as author_avatar,
-            c.name as category_name
-        FROM article a
-        LEFT JOIN user u ON a.author_id = u.id
-        LEFT JOIN category c ON a.category_id = c.id
-        WHERE a.author_id = #{userId}
-        <if test="status != null">
-            AND a.status = #{status}
-        </if>
-        ORDER BY a.create_time DESC
-    </select>
-    
-    <select id="selectHotArticles" resultMap="ArticleWithAuthorResultMap">
-        SELECT 
-            <include refid="Base_Column_List"/>,
-            u.nickname as author_name, u.avatar as author_avatar,
-            c.name as category_name
-        FROM article a
-        LEFT JOIN user u ON a.author_id = u.id
-        LEFT JOIN category c ON a.category_id = c.id
-        WHERE a.status = 1
-        ORDER BY a.view_count DESC, a.like_count DESC
-    </select>
-    
-    <select id="selectLatestArticles" resultMap="ArticleWithAuthorResultMap">
-        SELECT 
-            <include refid="Base_Column_List"/>,
-            u.nickname as author_name, u.avatar as author_avatar,
-            c.name as category_name
-        FROM article a
-        LEFT JOIN user u ON a.author_id = u.id
-        LEFT JOIN category c ON a.category_id = c.id
-        <if test="queryDTO.tagId != null">
-            INNER JOIN article_tag at ON a.id = at.article_id
-        </if>
-        <where>
-            a.status = 1
-            AND a.publish_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-            <if test="queryDTO.categoryId != null">
-                AND a.category_id = #{queryDTO.categoryId}
-            </if>
-            <if test="queryDTO.tagId != null">
-                AND at.tag_id = #{queryDTO.tagId}
-            </if>
-        </where>
-        ORDER BY a.is_top DESC, a.publish_time DESC
-    </select>
-    
-    <select id="selectRecommendArticles" resultMap="ArticleWithAuthorResultMap">
-        SELECT 
-            <include refid="Base_Column_List"/>,
-            u.nickname as author_name, u.avatar as author_avatar,
-            c.name as category_name
-        FROM article a
-        LEFT JOIN user u ON a.author_id = u.id
-        LEFT JOIN category c ON a.category_id = c.id
-        WHERE a.status = 1 AND a.is_recommend = 1
-        ORDER BY a.publish_time DESC
-        LIMIT #{limit}
-    </select>
-    
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO article (title, summary, content, html_content, cover_image, author_id, 
-            category_id, status, is_top, is_recommend, publish_time)
-        VALUES (#{title}, #{summary}, #{content}, #{htmlContent}, #{coverImage}, #{authorId},
-            #{categoryId}, #{status}, #{isTop}, #{isRecommend}, 
-            <if test="status == 1">NOW()</if><if test="status != 1">NULL</if>)
-    </insert>
-    
-    <!-- 注意：update 方法由 MyBatis-Plus BaseMapper 提供，不需要在 XML 中定义 -->
-    
-    <delete id="deleteById">
-        DELETE FROM article WHERE id = #{id}
-    </delete>
-    
-    <update id="increaseViewCount">
-        UPDATE article SET view_count = view_count + 1 WHERE id = #{articleId}
-    </update>
-    
-    <update id="increaseLikeCount">
-        UPDATE article SET like_count = like_count + #{increment} WHERE id = #{articleId}
-    </update>
-    
-    <update id="increaseCommentCount">
-        UPDATE article SET comment_count = comment_count + #{increment} WHERE id = #{articleId}
-    </update>
-    
+
     <select id="countArticles" resultType="java.lang.Long">
         SELECT COUNT(*) FROM article
         <where>

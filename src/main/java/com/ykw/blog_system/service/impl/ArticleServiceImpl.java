@@ -55,7 +55,10 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     private UserMapper userMapper;
-    
+
+    @Autowired
+    private ArticleDetailMapper articleDetailMapper;
+
     @Override
     public ResultVO<PageVO<ArticleVO>> queryArticles(ArticleQueryDTO queryDTO) { 
         Page<Article> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
@@ -82,6 +85,14 @@ public class ArticleServiceImpl implements ArticleService {
         }
         ArticleVO articleVO = new ArticleVO();
         BeanUtils.copyProperties(article, articleVO);
+
+        if (article.getArticleContentId() != null) {
+            ArticleDetail articleDetail = articleDetailMapper.selectById(article.getArticleContentId());
+            if (articleDetail != null) {
+                articleVO.setContent(articleDetail.getContent());
+                articleVO.setHtmlContent(articleDetail.getHtmlContent());
+            }
+        }
 
         List<Tag> tags = tagMapper.selectByArticleId(articleId);
         List<TagVO> tagVOList = tags.stream().map(tag -> {
@@ -117,15 +128,15 @@ public class ArticleServiceImpl implements ArticleService {
 
         // 3. 执行更新并校验结果
         int affectedRows = articleMapper.update(null, updateWrapper);
-        
+
         if (currentUserId != null) {
             recordUserBehavior(currentUserId, articleId, "view", new BigDecimal("1.0"));
         }
-        
 
-        
 
-        
+
+
+
         return ResultVO.success(articleVO);
     }
     
@@ -138,9 +149,21 @@ public class ArticleServiceImpl implements ArticleService {
         article.setViewCount(0);
         article.setLikeCount(0);
         article.setCommentCount(0);
-        
+        article.setCollectionCount(0);
+
         articleMapper.insert(article);
-        
+
+        ArticleDetail articleDetail = new ArticleDetail();
+        articleDetail.setArticleId(article.getId());
+        articleDetail.setVersion(0);
+        articleDetail.setContent(articleDTO.getContent());
+        articleDetail.setHtmlContent(articleDTO.getHtmlContent());
+        articleDetail.setDeleted(0);
+        articleDetailMapper.insert(articleDetail);
+
+        article.setArticleContentId(articleDetail.getId());
+        articleMapper.updateById(article);
+
         if (articleDTO.getTagIds() != null && !articleDTO.getTagIds().isEmpty()) {
             List<ArticleTag> articleTags = articleDTO.getTagIds().stream()
                     .map(tagId -> {
@@ -152,7 +175,7 @@ public class ArticleServiceImpl implements ArticleService {
                     .collect(Collectors.toList());
             articleTags.forEach(articleTagMapper::insert);
         }
-        
+
         return ResultVO.success("创建成功", article.getId());
     }
     
@@ -163,14 +186,35 @@ public class ArticleServiceImpl implements ArticleService {
         if (article == null) {
             return ResultVO.error("文章不存在");
         }
-        
+
         if (!article.getAuthorId().equals(currentUserId) && !SecurityUtil.isAdmin()) {
             return ResultVO.error("无权修改此文章");
         }
-        
-        BeanUtils.copyProperties(articleDTO, article);
+
+        article.setTitle(articleDTO.getTitle());
+        article.setSummary(articleDTO.getSummary());
+        article.setCoverImage(articleDTO.getCoverImage());
+        article.setCategoryId(articleDTO.getCategoryId());
+        article.setStatus(articleDTO.getStatus());
+        article.setIsTop(articleDTO.getIsTop());
+        article.setIsRecommend(articleDTO.getIsRecommend());
+
+        Integer maxVersion = articleDetailMapper.getMaxVersion(article.getId());
+        if (maxVersion == null) {
+            maxVersion = -1;
+        }
+
+        ArticleDetail articleDetail = new ArticleDetail();
+        articleDetail.setArticleId(article.getId());
+        articleDetail.setVersion(maxVersion + 1);
+        articleDetail.setContent(articleDTO.getContent());
+        articleDetail.setHtmlContent(articleDTO.getHtmlContent());
+        articleDetail.setDeleted(0);
+        articleDetailMapper.insert(articleDetail);
+
+        article.setArticleContentId(articleDetail.getId());
         articleMapper.updateById(article);
-        
+
         articleTagMapper.deleteByArticleId(article.getId());
         if (articleDTO.getTagIds() != null && !articleDTO.getTagIds().isEmpty()) {
             List<ArticleTag> articleTags = articleDTO.getTagIds().stream()
@@ -183,7 +227,7 @@ public class ArticleServiceImpl implements ArticleService {
                     .collect(Collectors.toList());
             articleTags.forEach(articleTagMapper::insert);
         }
-        
+
         return ResultVO.success();
     }
     
@@ -491,6 +535,14 @@ public class ArticleServiceImpl implements ArticleService {
         for (Article article : articles) {
             ArticleVO articleVO = new ArticleVO();
             BeanUtils.copyProperties(article, articleVO);
+
+            if (article.getArticleContentId() != null) {
+                ArticleDetail articleDetail = articleDetailMapper.selectById(article.getArticleContentId());
+                if (articleDetail != null) {
+                    articleVO.setContent(articleDetail.getContent());
+                    articleVO.setHtmlContent(articleDetail.getHtmlContent());
+                }
+            }
 
             // 加载标签
             List<Tag> tags = tagMapper.selectByArticleId(article.getId());
