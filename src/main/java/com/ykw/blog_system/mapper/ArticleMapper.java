@@ -60,6 +60,7 @@ public interface ArticleMapper extends BaseMapper<Article> {
             "AND YEAR(publish_time) = #{year} " +
             "AND MONTH(publish_time) = #{month} " +
             "GROUP BY DAY(publish_time) " +
+            "ORDER BY day ASC")
     List<Map<String, Object>> selectDailyCountByMonth(@Param("year") Integer year, @Param("month") Integer month);
 
     @Select("SELECT a.*, u.nickname AS author_name, u.avatar AS author_avatar, c.name AS category_name " +
